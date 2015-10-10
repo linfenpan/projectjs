@@ -176,7 +176,9 @@ if(window.Project){
         }
         // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
         basePath = path.dir(script.hasAttribute ? script.src : script.getAttribute("src", 4));
-    }
+    };
+    
+    data.basePath = basePath;
 })(window.document);
 
 // 加载配置
@@ -275,8 +277,7 @@ loader.addTypeProcesser = function(type, fn){
 function parseBeforeExecute(dir, fn, callback){
     if(queryType(fn) === "function"){
         // 把注视删除
-        // 这里的效率应该不高，我决定，还是干掉它了
-        var str = fn.toString();// .replace(/\/\*[^*]*\*\/|\/\/[^\n\r]*/g, "");
+        var str = fn.toString().replace(/\/\*(.|\n|\s)*\*\/|\/\/[^\n\r]*/g, "");
         // 检测的正则
         var reg = /\brequire\s*\(([^)]*)\)/g;
         var res, readyCount = 0;

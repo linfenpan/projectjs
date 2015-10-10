@@ -1,1 +1,3 @@
-console.log(333);
+define(function(require, exports, module){
+    exports.data = "test3";
+});

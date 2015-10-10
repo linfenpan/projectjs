@@ -25,7 +25,9 @@ if(window.Project){
         }
         // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
         basePath = path.dir(script.hasAttribute ? script.src : script.getAttribute("src", 4));
-    }
+    };
+    
+    data.basePath = basePath;
 })(window.document);
 
 // 加载配置
