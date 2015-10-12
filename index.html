@@ -29,12 +29,8 @@
 <script src="./mods/main.js" charset="utf-8"></script> -->
 
 <script type="text/javascript">
-    // require("./script/data.js", function(data){
-    //     console.log(data);
-    // });
-
-    require("${basePath}/script/sea1.js", function(data){
-        console.log(data);
+    require("./script/data.js", "./script/user.js", function(data, user){
+        console.log(data, user);
     });
 </script>
 </html>

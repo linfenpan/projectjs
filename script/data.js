@@ -7,7 +7,13 @@ define(function(require, exports, module){
 
     console.log(require("$"));
     console.log(require("data"));
-    console.log(require("./data2.js"));
+    // console.log(require.url("./data2.js"));
+
+    require.async("./data2.js", function(data2){
+        console.log("加载data2", data2)
+    });
+
+    // console.log(require("./data2.js"));
 
     // require("http://www.100bt.com/resource/js/lib/jquery-min.js");
 });

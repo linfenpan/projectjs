@@ -1,7 +1,13 @@
+// 空函数
+function noop(){};
 // 类型查询
 var typeToString = Object.prototype.toString;
 function queryType(o){
     return typeToString.call(o).slice(1, -1).split(" ")[1].toLowerCase();
+};
+// 是函数?
+function isFunction(fn){
+    return typeof fn === "function";
 };
 
 // 获取函数内的字符串
@@ -9,6 +15,15 @@ function queryFnInnerText(fn){
     var str = fn.toString();
     // 为什么 是 /*! */ 这种注释呢? 因为压缩的时候，可以剔除
     return str.slice(str.indexOf("/*!") + 3, str.lastIndexOf("*/")).replace(/^[\n\r]*|[\n\r]*$/g, "");
+};
+
+// 遍历
+function each(obj, fn){
+    for(var i in obj){
+        if(obj.hasOwnProperty(i)){
+            fn(i, obj[i], obj);
+        }
+    }
 };
 
 // 数据的复制
