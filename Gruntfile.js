@@ -8,7 +8,7 @@ module.exports = function(grunt) {
         },
         concat: {
             options: {
-                banner: '/*! By <%= pkg.author %> <%= grunt.template.today("yyyy-mm-dd") %> v<%= pkg.version %> */\n;(function(window){\n',
+                banner: '/*! By <%= pkg.author %> <%= grunt.template.today("yyyy-mm-dd") %> v<%= pkg.version %> <%= pkg.repository.url %> */\n;(function(window){\n',
                 footer: '\n})(window);'
             },
             build: {
