@@ -29,6 +29,12 @@ module.exports = function(grunt) {
                 src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.js",
                 dest: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.min.js"
             }
+        },
+        copy: {
+            dist: {
+                src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.min.js",
+                dest: "./demo/<%= pkg.scriptName %>.min.js"
+            }
         }
     });
 
@@ -36,8 +42,9 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-copy');
 
     // 默认被执行的任务列表。
-    grunt.registerTask('default', ['clean', 'concat', 'uglify']);
+    grunt.registerTask('default', ['clean', 'concat', 'uglify', 'copy']);
 
 };

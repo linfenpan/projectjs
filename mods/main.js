@@ -44,7 +44,7 @@ if(window.Project){
     }else{
         node = doc.getElementById("projectnode") || doc.scripts[0];
         var i = 0;
-        while(i++, !script.src){
+        while(i++, !node.src){
             node = doc.scripts[i];
         }
         // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
