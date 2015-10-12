@@ -8,7 +8,7 @@
   },
   "author": "da宗熊",
   "license": "MIT",
-  "dist": "dist/",
+  "dist": "dist",
   "scriptName": "project",
   "devDependencies": {
     "grunt": "^0.4.5",

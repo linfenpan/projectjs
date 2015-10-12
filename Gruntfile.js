@@ -4,21 +4,21 @@ module.exports = function(grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         clean: {
-            dist: ["<%= pkg.dist %>*"]
+            dist: ["<%= pkg.dist %><%= pkg.version %>*"]
         },
         concat: {
             options: {
-                banner: '/*! By <%= pkg.author %> <%= grunt.template.today("yyyy-mm-dd") %> */\n;(function(window){\n',
+                banner: '/*! By <%= pkg.author %> <%= grunt.template.today("yyyy-mm-dd") %> v<%= pkg.version %> */\n;(function(window){\n',
                 footer: '\n})(window);'
             },
             build: {
                 src: ['mods/Callbacks.js', 'mods/loadScript.js', 'mods/pXMLHttpRequest.js', 'mods/path.js', 'mods/utils.js', 'mods/main.js'],
-                dest: '<%= pkg.dist %><%= pkg.scriptName %>.js',
+                dest: '<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.js',
             }
         },
         uglify: {
             options: {
-                // banner: '/*! By <%= pkg.author %> <%= grunt.template.today("yyyy-mm-dd") %> */\n;',
+                // banner: '/*! By <%= pkg.author %> <%= grunt.template.today("yyyy-mm-dd") %> v<%= pkg.version %> */\n;',
                 preserveComments: 'some',
                 compress: {
                     // 删除所有 console
@@ -26,8 +26,8 @@ module.exports = function(grunt) {
                 }
             },
             build: {
-                src: "<%= pkg.dist %><%= pkg.scriptName %>.js",
-                dest: "<%= pkg.dist %><%= pkg.scriptName %>.min.js"
+                src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.js",
+                dest: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.min.js"
             }
         }
     });
