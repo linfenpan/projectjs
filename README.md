@@ -72,16 +72,18 @@ define(true);
 5、加载任意内容
 
 ``` javascript
+// function 内，必须没有require等参数
 define("text", function(){
 /*!
 	这里的内容，会被返回咧~~，最前面的 ! 不能省略，如果参数小于3，则会把这里的所有内容返回
+	特别用于加载 html、css 或 多行文字 的内容，最合适不过了
 */
 });
 ```
 外部使用:
 ``` javascript
 require("text", function(text){
-	text === "这里的内容，会被.......返回";
+	text === "这里的内容，会被.......";
 });
 ```
 
