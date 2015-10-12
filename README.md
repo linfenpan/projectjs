@@ -1,8 +1,11 @@
 # 功能简要说明
 
-模仿sea.js编写的脚本，只有 require 和 define 两个方法。考虑到 sea.js 本身的 require，并不能加载样式、外部结果等，所以，在此进行了改进。
+项目地址: [projectM](https://github.com/linfenpan/projectM)
 
-并不完全遵循 cmd 规范，为了满足跨域读取资源的需求，定义了额外的define规则，不过总体还是遵循 cmd 规范的。
+模仿sea.js编写的脚本，只有 require 和 define 两个方法。
+考虑到 sea.js 本身的 require，并不能加载样式、外部html结构等，所以，在此进行了改进，并提供了相关的解决方案。
+
+并不完全遵循 cmd 规范，为了满足 **跨域** 读取资源的需求，定义了额外的define规则。
 
 PS: require 作为关键字，同样不可以被改名，被压缩
 
@@ -132,36 +135,42 @@ require.async("./data.js"); // ERROR
 2、define下
 
 ``` javascript
-var data = require("./data.js");   // OK
-require("./data.js", function(data){});   // OK，异步执行 fn，注: 如果 ./data.js 已加载，则会同步执行
-
-// 不支持用法:
-require("./data1.js", "./data2.js");   // ERROR，不会报错
-require("./data1.js", "./data2.js", function(data1, data2){}); // ERROR，不会报错
+define(function(require, exports, module){
+	var data = require("./data.js");   // OK
+	require("./data.js", function(data){});   // OK，异步执行 fn，注: 如果 ./data.js 已加载，则会同步执行
+	
+	// 不支持用法:
+	require("./data1.js", "./data2.js");   // ERROR，不会报错
+	require("./data1.js", "./data2.js", function(data1, data2){}); // ERROR，不会报错
+});
 ```
 
 但有一些用法是错的，绝对不允许使用:
 
 ``` javascript
-var data1 = require("./data1.js", "./data2.js");   // data1 = undefined 或 正常取值
-require("./data1.js", "./data2.js", function(data1, data2){}); // 不会执行callback
+define(function(require, exports, module){
+	var data1 = require("./data1.js", "./data2.js");   // data1 = undefined 或 正常取值
+	require("./data1.js", "./data2.js", function(data1, data2){}); // 不会执行callback
+});
 ```
 
 代替上面两种用法，你可以这样:
 
 ``` javascript
-var data1 = require("./data1.js");
-var data2 = require("./data2.js");
-
-require.async("./data1.js", "./data2.js", function(data1, data2){});
+define(function(require, exports, module){
+	var data1 = require("./data1.js");
+	var data2 = require("./data2.js");
+	
+	require.async("./data1.js", "./data2.js", function(data1, data2){});
+});
 ```
 
 
-# 总体配置
+# 项目配置
 
 在引入 project.js 前【这里比较懒，并没有做 dom ready 的判定】，如果定义有 window.Project 变量，则可对 project.js 进行配置。
 
-``` javascript
+``` html
 <script>
 var Project = {
 	path: {
