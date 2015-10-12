@@ -22,7 +22,7 @@ PS: require 作为关键字，同样不可以被改名，被压缩
 
 而对于 user.js 的定义:
 
-``` user.js
+``` javascript
 // 不完全遵循 cmd 规范，最多接受两个参数，1、板块名字[可缺省] 2、函数
 define(function(require, exports, module){
 	exports.name = "da宗熊";
@@ -34,7 +34,7 @@ define(function(require, exports, module){
 
 1、板块定义
 
-``` script
+``` javascript
 define(function(require, exports, module){
 	// 后缀的 .js 不能省略
 	var data = require("../data/data.js");
@@ -44,7 +44,7 @@ define(function(require, exports, module){
 
 2、可指定名字
 
-``` script
+``` javascript
 define("user", function(require, exports, module){
 	// 内容定义...
 });
@@ -53,7 +53,7 @@ define("user", function(require, exports, module){
 
 3、加载同域内容
 
-``` script
+``` javascript
 define(function(require, exports, module){
 	var css = require("./user.css");	// 作为文本，被加载进来
 });
@@ -61,7 +61,7 @@ define(function(require, exports, module){
 
 4、定义其它内容
 
-``` script
+``` javascript
 define({name: "", email: ""});
 // 或
 define("xxxyyy");
@@ -71,7 +71,7 @@ define(true);
 
 5、加载任意内容
 
-``` script
+``` javascript
 define("text", function(){
 /*!
 	这里的内容，会被返回咧~~，最前面的 ! 不能省略，如果参数小于3，则会把这里的所有内容返回
@@ -79,7 +79,7 @@ define("text", function(){
 });
 ```
 外部使用:
-```
+``` javascript
 require("text", function(text){
 	text === "这里的内容，会被.......返回";
 });
@@ -87,7 +87,7 @@ require("text", function(text){
 
 6、获取绝对路径
 
-```script
+``` javascript
 define(function(require, exports, module){
 	var url = require.url("./data.json");   // 获取的是，data.json的绝对路径
 });
@@ -95,7 +95,7 @@ define(function(require, exports, module){
 
 7、define中异步加载
 
-``` script
+``` javascript
 define(function(require, exports, module){
 	// 仅且只能异步加载 1 个内容
 	require("./data.json", function(data){
