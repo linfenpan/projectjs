@@ -1,5 +1,5 @@
 // 路径解析
-path = {};
+var path = {};
 // 路径格式化
 path.normal = function(p){
     // 把 ./a/./b//c/d/../e/ ==> ./a//b//c/d/../e/

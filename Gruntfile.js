@@ -22,7 +22,11 @@ module.exports = function(grunt) {
                 preserveComments: 'some',
                 compress: {
                     // 删除所有 console
-                    drop_console: true
+                    drop_console: true,
+					conditionals: true,
+					booleans: true,
+					loops: true,
+					join_vars: true
                 }
             },
             build: {
