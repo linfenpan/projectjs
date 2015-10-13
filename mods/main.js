@@ -216,8 +216,8 @@ function createInnerRequire(url){
     var dir = path.dir(url);
     function innerRequire(url, callback){
         // 名字 或 绝对路径
-        var absoluteUrl = concatFilePath(url, dir);
-        return requireOne(absoluteUrl, callback);
+        var absoluteUrl = concatFilePath(url, dir), args = arguments;
+        return args.length <= 1 ? requireOne(absoluteUrl, callback) : innerRequire.async.apply(this, args);
     };
     // 链接
     innerRequire.url = function(url){

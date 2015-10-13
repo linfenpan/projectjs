@@ -1,4 +1,4 @@
-/*! By da宗熊 2015-10-13 v1.0.0 https://github.com/linfenpan/projectM.git */
+/*! By da宗熊 2015-10-13 v1.0.1 https://github.com/linfenpan/projectM.git */
 ;(function(window){
 // 带有信号的 回调
 /*

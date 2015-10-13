@@ -104,7 +104,7 @@ define(function(require, exports, module){
 define(function(require, exports, module){
 	// 仅且只能异步加载 1 个内容
 	require("./data.json", function(data){
-   		// 这里是异步执行的内容 
+   		// 这里是异步执行的内容
    	});
    // 或者，通过 async 加载多个内容
    require.async("./data.json", "./user.js", function(data, user){
@@ -138,7 +138,7 @@ require.async("./data.js"); // ERROR
 define(function(require, exports, module){
 	var data = require("./data.js");   // OK
 	require("./data.js", function(data){});   // OK，异步执行 fn，注: 如果 ./data.js 已加载，则会同步执行
-	
+
 	// 不支持用法:
 	require("./data1.js", "./data2.js");   // ERROR，不会报错
 	require("./data1.js", "./data2.js", function(data1, data2){}); // ERROR，不会报错
@@ -149,8 +149,8 @@ define(function(require, exports, module){
 
 ``` javascript
 define(function(require, exports, module){
-	var data1 = require("./data1.js", "./data2.js");   // data1 = undefined 或 正常取值
-	require("./data1.js", "./data2.js", function(data1, data2){}); // 不会执行callback
+	var data1 = require("./data1.js", "./data2.js");   // data1 = undefined 或 正常取值 [在1.0.1之后，变为异步请求内容]
+	require("./data1.js", "./data2.js", function(data1, data2){}); // 不会执行callbacb [在1.0.1之后，变为异步请求内容，callback也会执行]
 });
 ```
 
@@ -160,7 +160,7 @@ define(function(require, exports, module){
 define(function(require, exports, module){
 	var data1 = require("./data1.js");
 	var data2 = require("./data2.js");
-	
+
 	require.async("./data1.js", "./data2.js", function(data1, data2){});
 });
 ```
@@ -217,7 +217,7 @@ Project = {
 ```
 在define中，使用如下:
 ```javascript
-var $ = require("$"); // => 拿到了 window.jQuery 
+var $ = require("$"); // => 拿到了 window.jQuery
 ```
 
 

@@ -8,5 +8,8 @@ define(function(require, exports, module){
     exports.name = "Project.js";
     exports.version = "1.0.0";
     exports.style = require("../css/user.css");
-    exports.otherCss = require("./user.css.js");
+    // 这是异步请求了
+    exports.otherCss = require("./user.css.js", function(text, json){
+        console.log("css样式:" + text);
+    });
 });
