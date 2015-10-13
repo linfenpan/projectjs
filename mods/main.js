@@ -77,7 +77,7 @@ var requireMap = {
 // 仅且加载一个
 function requireOne(url, callback){
     url = concatFilePath(url);
-    if(loaded[url] || url in loaded){
+    if(url in loaded){
         loaded[url].done(function(exports){
             isFunction(callback) && callback(exports);
         });
@@ -98,7 +98,7 @@ function requireOne(url, callback){
                         parseBeforeExecute(path.dir(url), res, function(fn){
                             if(isFunction(res)){
                                 var module = {exports: {}};
-                                res(createInnerRequire(url), module.exports, module);
+                                res(createiRequire(url), module.exports, module);
                                 res = module.exports;
                             }
                             next(res);
@@ -168,8 +168,8 @@ loader.define = function(name, fn){
 };
 
 // 添加文件 处理器
-loader.addTypeProcesser = function(type, fn){
-    requireMap[type] = isFunction(fn) ? fn : (requireMap[fn] || requireMap["default"]);
+loader.addProcesser = function(type, fn){
+    requireMap[type] = isFunction(fn) ? fn : requireMap[fn];
 };
 
 // 文件执行前，对路径进行预解析
@@ -212,19 +212,20 @@ function parseBeforeExecute(dir, fn, callback){
 
 // define 使用 的 require
 // 内置的 require，需要修复一次路径
-function createInnerRequire(url){
+var cssMap = {};
+function createiRequire(url){
     var dir = path.dir(url);
-    function innerRequire(url, callback){
+    function iRequire(url, callback){
         // 名字 或 绝对路径
         var absoluteUrl = concatFilePath(url, dir), args = arguments;
-        return args.length <= 1 ? requireOne(absoluteUrl, callback) : innerRequire.async.apply(this, args);
+        return args.length <= 1 ? requireOne(absoluteUrl, callback) : iRequire.async.apply(this, args);
     };
     // 链接
-    innerRequire.url = function(url){
+    iRequire.url = function(url){
         return concatFilePath(url, dir);
     };
     // 异步请求
-    innerRequire.async = function(){
+    iRequire.async = function(){
         // 修正一次路径
         // 然后调用 loader.require
         var args = [].slice.call(arguments, 0), item;
@@ -234,7 +235,16 @@ function createInnerRequire(url){
         };
         loader.require.apply(loader, args);
     };
-    return innerRequire;
+	iRequire.css = function(url){
+		url = concatFilePath(url, dir);
+		if(!cssMap[url]){
+			var link = document.createElement("link");
+			link.rel = "stylesheet";
+			link.href = url;
+			head.appendChild(link);
+		};
+	};
+    return iRequire;
 };
 
 // 合并文件路径
@@ -255,5 +265,5 @@ function concatFilePath(url, dir){
 
 window.require = loader.require;
 window.define = loader.define;
-window.require.addTypeProcesser = loader.addTypeProcesser;
+window.require.addProcesser = loader.addProcesser;
 window.require.ajax = ajax;

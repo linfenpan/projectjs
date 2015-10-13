@@ -1,4 +1,4 @@
-var head = document.documentElement || document.getElementsByTagName("head")[0];
+var head = document.head || document.getElementsByTagName("head")[0];
 function loadScript(src, callback){
     var script = document.createElement("script");
     script.async = true;
