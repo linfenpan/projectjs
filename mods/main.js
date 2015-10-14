@@ -183,7 +183,7 @@ loader.addProcesser = function(type, fn){
 function parseBeforeExecute(dir, fn, callback){
     if(isFunction(fn)){
         // 把注视删除
-        var str = fn.toString().replace(/\/\*(.|\n|\s)*\*\/|\/\/[^\n\r]*/g, "");
+        var str = fn.toString().replace(/\/\*(.|\n|\s)*?\*\/|\/\/[^\n\r]*/g, "");
         // 检测的正则
         var reg = /\brequire\s*\(([^)]*)\)/g;
         var res, readyCount = 0, afterCompile = false;
