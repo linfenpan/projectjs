@@ -1,6 +1,5 @@
 var data = {basePath: null}; // 模板数据, basePath: "/"
 var loaded = {};            // 加载完成的脚本
-var basePath = "";
 
 // 异步对象
 function queryDeferred(url){
@@ -17,41 +16,49 @@ function queryDeferred(url){
     }
 };
 
-// 项目设置
-if(window.Project){
-    extend(data, window.Project.path || {});
-    // 修正外部引用
-    var other = window.Project.other;
-    if(other){
-        each(other, function(i, val){
-            var def = queryDeferred(i);
-            def.resolve(other[i]);
-        });
-    };
-};
+// 配置
+function config(pro){
+    pro = pro || {};
+    data = pro.path || data;
 
-// 计算基础路径
-;(function(doc){
-    var node = null;
-    if(data.basePath){
-        basePath = data.basePath;
-        if(!path.isAbsolute(basePath)){
-            node = doc.createElement("a");
-            node.setAttribute("href", basePath);
+
+    // 修正外部引用
+    each(pro.other || {}, function(i, val){
+        var def = queryDeferred(i);
+        def.resolve(val);
+    });
+
+    // 修正引入路径
+    // 1、默认为当前 location.href
+    // 2、有id=projectnode，则相对当前script引入路径，有data-rel=""属性，就从当前引入路径寻找相对路径
+    // 3、有设置的，使用设置
+    var node, base = data.basePath;
+    if(base){
+        if(!path.isAbsolute(base)){
+            node = document.createElement("a");
+            node.setAttribute("href", base);
             // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
-            basePath = path.dir(node.hasAttribute ? node.href : node.getAttribute("href", 4));
+            data.basePath = path.dir(node.hasAttribute ? node.href : node.getAttribute("href", 4));
         }
     }else{
-        node = doc.getElementById("projectnode") || doc.scripts[0];
-        var i = 0;
-        while(i++, !node.src){
-            node = doc.scripts[i];
+        node = document.getElementById("projectnode");
+        if(node){
+            // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
+            var base = path.dir(node.hasAttribute ? node.src : node.getAttribute("src", 4));
+            var rel = node.getAttribute("data-rel")
+            if(rel){
+                base = path.join(base, rel);
+            };
+            data.basePath = base;
+        }else{
+            data.basePath = path.dir(window.location.href);
         }
-        // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
-        basePath = path.dir(node.hasAttribute ? node.src : node.getAttribute("src", 4));
     };
-    data.basePath = basePath;
-})(window.document);
+    node = null;
+
+    // 路径模板
+    pathFormat = Format(data);
+};
 
 // 加载配置
 // p 是路径
@@ -249,7 +256,7 @@ function createiRequire(url){
 
 // 合并文件路径
 // 让 文件 路径，支持模板计算方法
-var pathFormat = Format(data);
+var pathFormat;
 function concatFilePath(url, dir){
     if(loaded[url]){
         return url;
@@ -259,11 +266,15 @@ function concatFilePath(url, dir){
     if(path.isAbsolute(url)){
         return url;
     }else{
-        return path.join(dir || basePath, url);
+        return path.join(dir || data.basePath, url);
     }
 };
 
+// 初始配置
+config(window.Project || {});
+
 window.require = loader.require;
 window.define = loader.define;
+window.require.config = config;
 window.require.addProcesser = loader.addProcesser;
 window.require.ajax = ajax;

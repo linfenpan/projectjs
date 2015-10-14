@@ -120,50 +120,49 @@ define(function(require, exports, module){
 1、window下
 
 ``` javascript
+// 都是 异步 加载脚本
 require("./data.js");   // OK
 require("./data.js", function(data){});   // OK
 require("./data1.js", "./data2.js");   // OK
 require("./data1.js", "./data2.js", function(data1, data2){}); // OK
 ```
-但是
+但是，window.require下，并没有注入 url/css/async 等方法
 
 ``` javascript
 require.url("./data.js"); // ERROR
 require.async("./data.js"); // ERROR
+require.css("./data.css"); // ERROR
 ```
 
 2、define下
 
 ``` javascript
 define(function(require, exports, module){
-	var data = require("./data.js");   // OK
-	require("./data.js", function(data){});   // OK，异步执行 fn，注: 如果 ./data.js 已加载，则会同步执行
+	// OK，同步返回内容
+	var data = require("./data.js");
 
-	// 不支持用法:
-	require("./data1.js", "./data2.js");   // ERROR，不会报错
-	require("./data1.js", "./data2.js", function(data1, data2){}); // ERROR，不会报错
+	// OK，异步执行 fn，注: 如果 ./data.js 已加载，则会同步执行  
+	require("./data.js", function(data){});   
+	// OK，异步加载两个脚本
+	require("./data1.js", "./data2.js");
+	// OK，异步加载脚本，并执行回调
+	require("./data1.js", "./data2.js", function(data1, data2){});
 });
 ```
-
-但有一些用法是错的，绝对不允许使用:
-
-``` javascript
+define中，require注入了额外的几个方法:
+```javascript
 define(function(require, exports, module){
-	var data1 = require("./data1.js", "./data2.js");   // data1 = undefined 或 正常取值 [在1.0.1之后，变为异步请求内容]
-	require("./data1.js", "./data2.js", function(data1, data2){}); // 不会执行callbacb [在1.0.1之后，变为异步请求内容，callback也会执行]
+	// 返回 data.js 的绝对路径
+	var url = require.url("./data.js");
+
+	// 异步加载 data.js，等同于 require("./data.js", function(){});
+	require.async("./data.js");
+
+	// document中，加载data.css【生成link标签，不会重复加载】
+	require.css("./data.css");
 });
 ```
 
-代替上面两种用法，你可以这样:
-
-``` javascript
-define(function(require, exports, module){
-	var data1 = require("./data1.js");
-	var data2 = require("./data2.js");
-
-	require.async("./data1.js", "./data2.js", function(data1, data2){});
-});
-```
 
 
 # 项目配置
@@ -184,10 +183,17 @@ var Project = {
 </script>
 <script src="project.js" id="projectnode"></script>
 ```
+或者，通过 require.config 代替 Project 变量:
+``` javascript
+<script src="project.js" id="projectnode"></script>
+<script>
+	require.config({/**参考 window.Project*/});
+</script>
+```
 
 1、path： 路径模板配置
 
-* basePath: 项目的根路径，不配置，默认查找 id=projectnode 的脚本，如果两者均不存在，则查找第1个含有src的脚本，并以该脚本所在目录，做为根目录。
+* basePath: 特殊关键字，项目的根路径，所有require都根据此根路径，进行查找。
 
 此配置，用于某些特殊场景，如需要给一些域名，添加一个别名，可以这样子:
 
@@ -219,6 +225,26 @@ Project = {
 ```javascript
 var $ = require("$"); // => 拿到了 window.jQuery
 ```
+
+# 基础路径
+
+对于require寻找资源的基础路径，基于几个简单的原则【如当前页面地址是 http://www.test.com/demo/index.html 】:
+
+1)  有设置 basePath属性: basePath是绝对路径目录，采用此路径；是相对路径，根据当前链接，拼接相对路径的值，查找到绝对目录
+```javascript
+require.config({path: {basePath: "http://www.guopan.com/"}});
+```
+basePath === "http://www.guopan.com/";
+
+2) 没有basePath，有id=projectnode的脚本: 使用此脚本所在目录的绝对路径；如果有data-rel属性，则脚本所在的目录的绝对路径，拼接data-rel的值，得出新的绝对目录路径。
+```html
+<script id="projectnode" data-rel="../data" src="./project.js"></script>
+```
+basePath === "http://www.test.com/data/";
+
+3) 均没设置: 采用当前链接的目录绝对路径
+
+basePath === "http://www.test.com/demo/";
 
 
 # 结语
