@@ -12,7 +12,7 @@ module.exports = function(grunt) {
                 footer: '\n})(window);'
             },
             build: {
-                src: ['mods/Callbacks.js', 'mods/loadScript.js', 'mods/pXMLHttpRequest.js', 'mods/path.js', 'mods/utils.js', 'mods/main.js'],
+                src: ['mods/loadScript.js', 'mods/pXMLHttpRequest.js', 'mods/path.js', 'mods/utils.js', 'mods/main.js'],
                 dest: '<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.js',
             }
         },

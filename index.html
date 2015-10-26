@@ -28,11 +28,15 @@
 <script src="./mods/main.js" charset="utf-8"></script>
 
 <script type="text/javascript">
-    require("${basePath}/script/data.js", "${basePath}/script/user.js", function(data, user){
-        console.log(data, user);
+    define("innerData", function(require, exports, module){
+        var $ = require("$");
+        console.log($);
+        module.exports = {
+            text: "For inner data!"
+        };
     });
-    require("$", function(t){
-        console.log(t);
+    require("${basePath}/script/data.js", "${basePath}/script/user.js", "innerData", function(data, user, inner){
+        console.log(data, user, inner);
     });
 </script>
 </html>

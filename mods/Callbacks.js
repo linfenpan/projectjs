@@ -1,4 +1,5 @@
 // 带有信号的 回调
+// 这一块这一版本，废弃掉
 /*
     var cb = new Callbacks({}, false);
     cb.add(function(){
