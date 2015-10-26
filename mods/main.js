@@ -4,13 +4,18 @@ var loaded = {};            // 加载完成的脚本
 // 异步对象
 function queryDeferred(url){
     if(loaded[url]){
-        return loaded[url].def;
+        return loaded[url];
     }else{
-        var def = new Callbacks({done: [1, "resolve"], always: 0}, true);
+        var def = new Callbacks({preDone: [2, "preResolve"], done: [1, "resolve"], always: 0}, true);
         loaded[url] = def;
         def.exports = null;
+        def.preExports = null;
+        def.preDone(function(res){
+            def.preExports = res;
+        });
         def.done(function(res){
             def.exports = res;
+            // 做 1 次清理工作
         });
         return def;
     }
@@ -78,26 +83,32 @@ var requireMap = {
                 next(ext == "json" ? toJSON(text) : text);
             }
         });
+    },
+    // 自己加载自己
+    "__": function(res, next, ext){
+        next(res, true);
     }
 };
 
 // 仅且加载一个
 function requireOne(url, callback){
     url = concatFilePath(url);
-    if(url in loaded){
+    // 获取 def 对象
+    var def = queryDeferred(url);
+    if(def && def.exports){
         loaded[url].done(function(exports){
             isFunction(callback) && callback(exports);
         });
         return loaded[url].exports;
     }else{
-        // 获取 def 对象
-        var def = queryDeferred(url);
         // 开始加载
         var ext = path.ext(url);
-        var fn = requireMap[ext] || requireMap["default"];
-        fn(url, function(res, isFromScript){
+        // 如果是 define(name, fn) 这种形式的，从 def.preExports 中，获取数据
+        var fn = requireMap[def.preExports ? "__" : ext] || requireMap["default"];
+        fn(def.preExports || url, function(res, isFromScript){
+            // 处理 define 函数
             if(isFromScript){
-                res = defineRes;
+                res = res || defineRes;
                 defineRes = null;
                 if(isFunction(res)){
                     if(res.length == 3){
@@ -170,7 +181,8 @@ loader.define = function(name, fn){
         defineRes = name;
     }else{
         var def = queryDeferred(name);
-        def.resolve(fn);
+        // 如果是 函数，可能完成了加载
+        def.preResolve(fn);
     };
 };
 
@@ -229,7 +241,7 @@ function createiRequire(url){
     };
     // 链接
     iRequire.url = function(url){
-        return concatFilePath(url, dir);
+        return concatFilePath(pathFormat(url), dir);
     };
     // 异步请求
     iRequire.async = function(){
@@ -243,7 +255,8 @@ function createiRequire(url){
         loader.require.apply(loader, args);
     };
 	iRequire.css = function(url){
-		url = concatFilePath(url, dir);
+        // 路径必须要先 绝对化
+		url = this.url(url, dir);
 		if(!cssMap[url]){
 			var link = document.createElement("link");
 			link.rel = "stylesheet";
