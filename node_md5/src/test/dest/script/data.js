@@ -1,1 +1,3 @@
-define(function(require,a,n){n.exports=require("../data/data.json")});
+define(function(require, exports, module){
+    module.exports = require("../data/data.json");
+});

@@ -23,6 +23,6 @@ PM.minifyjs({
 }, "static");
 
 
-// PM.run("copy", "minifyjs", "minifycss");
+PM.run("copy");
 // 等价于
-PM.runGroup("static");
+// PM.runGroup("static");

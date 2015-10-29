@@ -27,10 +27,4 @@ log.error = function(str){
 log.info = function(str){
     console.log(`${str}`.info.bold);
 };
-// 进度条
-var pbar = require("progress");
-log.getProgress = function(total){
-    var bar = new pbar(":percent [:bar]", {total: total, width:10, clear: false});
-    return bar;
-};
 module.exports = log;

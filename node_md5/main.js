@@ -1,9 +1,6 @@
 "use strict";
-
 var path = require("path");
-var matcher = require("./lib/matcher");
-var dir = require("./lib/dir");
-var Signal = require("./lib/Signal");
+var queryFiles = require("./lib/queryFiles");
 
 // 查询对象类型
 var toString = Object.prototype.toString;
@@ -72,7 +69,7 @@ PM.prototype = {
                     this.log.error("task [" + name + "] does not exist");
                 }
             }
-            this.log.info("********** end task: " + name + "\n\n");
+            this.log.info("********** end task: " + name + "\n");
         }.bind(this));
     },
     // 执行一组任务
@@ -87,7 +84,7 @@ PM.prototype = {
                 list.forEach(function(fn){
                     fn();
                 }.bind(this));
-                this.log.info("********** end of group: " + name + "-->" + i + "\n\n");
+                this.log.info("********** end of group: " + name + "-->" + i + "\n");
             }
         }
     },
@@ -163,13 +160,12 @@ PM.prototype = {
             if(list){
                 let resList = list;
                 tasks.push(function(){
-                    console.log(2222, resList);
-                    fn.call(this, null, this.filter(resList), options);
+                    fn.call(this, null, this.find(resList), options);
                 }.bind(this));
             }else{
                 for(let i in obj){
                     tasks.push(function(){
-                        fn.call(this, {path: i, isFile: /[^\/\\]+\.[^.]+$/.test(i)}, this.filter(obj[i]), options);
+                        fn.call(this, {path: i, isFile: /[^\/\\]+\.[^.]+$/.test(i)}, this.find(obj[i]), options);
                     }.bind(this));
                 }
             };
@@ -178,58 +174,17 @@ PM.prototype = {
         return this;
     },
     // 列表过滤
-    filter: function(str, cwd){
-        var res = [];
+    find: function(str, cwd){
         cwd = cwd || this.options.cwd;
-
-        if(typeof str == "string"){
-            str = [str];
-        };
-        str.forEach(function(str){
-            var isString = typeof str == "string", isNotMode = false;
-            if(isString){
-                isNotMode = str.indexOf("!") == 0;
-                str = str.replace(/^!/, "");
-            }
-            str = path.normalize(str);
-
-            // 否则，是新增
-            var reg = matcher.parse(str);
-            // 如果是以 ! 开头的字符串，则是删除操作
-            if(isNotMode){
-                res = res.filter(function(file){
-                    var rel = path.relative(cwd, file);
-                    return !reg.test(rel);
-                });
-            }else{
-                res.push.apply(res, this.queryFiles(str, cwd));
-            }
-        }.bind(this));
-
-        return res;
+        return queryFiles.find(str, cwd);
     },
-    // 根据当前 cwd，查询对应的文件
-    queryFiles: function(str, cwd){
-        cwd = cwd || this.options.cwd;
-        // ./xxx/yyy/*.js ---> xxx/yyy/*.js
-        // ../xxx/yyy/*.js ---> ../xxx/yyy/*.js
-        str = path.normalize(str);
-
-        // ./xxx/*.js --> 直接匹配
-        // ../xxx/yyy/*/*.js --> 处理后，匹配
-        if(/^\.\./.test(str)){
-            // 把 ../xxx/*.js ---> rel = "../"; str = "xxx/*.js"
-            let rel = new Array(str.match(/\.\./g).length + 1).join("/");
-            cwd = path.join(cwd, rel);
-            str = str.replace(/\.\.[\/\\]/g, "");
-        }
-        return dir.each(str, cwd);
-    },
+    // 文件操作
     fs: require("fs-extra"),
     // 打印的样式
-    log: require("./lib/colors")
+    log: require("./lib/colors"),
+    // 文件查询
+    queryFiles: queryFiles
 };
-
 
 // 外部接口
 function Out(){
@@ -240,28 +195,11 @@ function Out(){
     }
     return Out;
 };
+
 if(true){
-    let obj = new PM();
-    obj.addPlugins(require("./plugins/innerPlugins"));
+    let obj = new Out();
     for(let i in obj){
         Out[i] = obj[i];
     }
 };
 module.exports = Out;
-
-
-// var realPath = path.relative(path.resolve("./"), "./test/demo.html");
-// console.log(matcher(realPath, "*.(html|js)", {matchLast: true}));
-
-// 给所有文件 压缩、打上 md5
-// var proc = require("./lib/process");
-// console.log(proc.js(path.resolve("./test/script/data.js")));
-// console.log(proc.css(path.resolve("./test/css/user.css")));
-// console.log(proc.html(path.resolve("./test/demo.html")));
-
-// var minimatch = require("minimatch");
-//
-// console.log(minimatch("bar.foo", "*.foo"));
-// console.log(minimatch("./aa/bbb.txt", "*.{txt,png}", {matchBase: true}))
-// console.log(minimatch("./aa/bbb.txt", ".*", {matchBase: true}))
-// console.log(minimatch("./aa/bbb.txt", "./**/*.+(txt|png)"))
