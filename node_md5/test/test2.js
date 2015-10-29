@@ -18,11 +18,23 @@ PM.minifyjs({
         }
     },
     files: ["./test/dest/script/*.js", "!./test/dest/script/user.js"]
-}, "static").minifycss({
+}, "static");
+
+PM.minifycss({
     files: ["./test/dest/css/**"]
 }, "static");
 
 
-PM.run("copy");
+PM.pmd5({
+    options: {
+        length: 8,
+        cwd: "./test/dest",
+        fix: ["html"]
+    },
+    files: ["./css/*"]
+});
+
+
+PM.run("pmd5");
 // 等价于
 // PM.runGroup("static");

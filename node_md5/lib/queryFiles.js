@@ -10,8 +10,9 @@ var searcher = {};
 /**
  * @param list {String | Array} 需要寻找的文件列表 | 文件
  * @param cwd {String} 需要开始寻找的目录，必须是目录
+ * @param options {Object} mather 匹配的参数 {mathLast:, matchStart:}
  */
-searcher.find = function(list, cwd){
+searcher.find = function(list, cwd, options){
     if(!util.isArray(list)){
         list = [list || "*"];
     }
@@ -33,10 +34,10 @@ searcher.find = function(list, cwd){
         if(isNotMode){
             let _str = query.glob, _cwd = query.cwd;
             res = res.filter(function(file){
-                return !isMatch(_str, file, _cwd);
+                return !isMatch(_str, file, _cwd, options);
             });
         }else{
-            res.push.apply(res, searchFile(query.glob, query.cwd));
+            res.push.apply(res, searchFile(query.glob, query.cwd, query.cwd, options));
         }
     });
 
@@ -85,9 +86,10 @@ function normalizeQueryPath(str, cwd){
  * @param str {String | RegExp} glob表达式或正则
  * @param dir {String} 当前搜索目录
  * @param cwd {String} 搜索的根目录，如果为 null，则等于 dir
+ * @param options {Object} mather 匹配的参数 {mathLast:, matchStart:}
  * @return [文件列表]
  */
-function searchFile(str, dir, cwd){
+function searchFile(str, dir, cwd, options){
     cwd = cwd || dir;
     if(!fs.existsSync(dir)){
         return [];
@@ -99,9 +101,9 @@ function searchFile(str, dir, cwd){
         // 目录再深入遍历
         // 文件，则进行匹配判断
         if(fs.statSync(absUrl).isDirectory()){
-            res.push.apply(res, searchFile(str, absUrl, cwd));
+            res.push.apply(res, searchFile(str, absUrl, cwd, options));
         }else{
-            if(isMatch(str, absUrl, cwd)){
+            if(isMatch(str, absUrl, cwd, options)){
                 res.push(absUrl);
             }
         }
@@ -115,12 +117,13 @@ function searchFile(str, dir, cwd){
  * @param str {String | 正则}
  * @param url {String} 需要匹配的绝对路径
  * @param cwd {String} 匹配的上下文路径
+ * @param options {Object} mather 匹配的参数 {mathLast:, matchStart:}
  */
-function isMatch(str, url, cwd){
+function isMatch(str, url, cwd, options){
     // 因为绝对路径，./script/*.js  -- 将会匹配 --> ./script/*.js 和 ./dest/script/*.js
     // 使用相对路径，避免这个尴尬
     var rel = path.relative(cwd, url);
-    return matcher(rel, str);
+    return matcher(rel, str, options);
 };
 searcher.isMatch = isMatch;
 

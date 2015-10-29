@@ -1,5 +1,3 @@
-var searcher = require("../lib/queryFiles");
-var path = require("path");
-// console.log(
-//     searcher.find(["./src/**"], path.join(__dirname, ".."))
-// );
+var md5 = require("crypto-js/md5");
+
+console.log(md5("112312xxadfs3123").toString());

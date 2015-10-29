@@ -153,19 +153,22 @@ PM.prototype = {
             }
 
             // obj => {options: {}, files: [], "xxxx": "yyyy"}
-            var options = extend({cwd: this.options.cwd, taskName: anotherName ? `${name}:${anotherName}` : `${name}`}, obj.options || {}), list = obj.files;
+            var options = obj.options || {}, list = obj.files;
+            options.cwd = path.isAbsolute(options.cwd || "") ? options.cwd : path.join(this.options.cwd, options.cwd || "");
+            extend(options, {taskName: anotherName ? `${name}:${anotherName}` : `${name}`});
+
             delete obj.options;
             delete obj.files;
 
             if(list){
                 let resList = list;
                 tasks.push(function(){
-                    fn.call(this, null, this.find(resList), options);
+                    fn.call(this, null, this.find(resList, options.cwd), options);
                 }.bind(this));
             }else{
                 for(let i in obj){
                     tasks.push(function(){
-                        fn.call(this, {path: i, isFile: /[^\/\\]+\.[^.]+$/.test(i)}, this.find(obj[i]), options);
+                        fn.call(this, {path: i, isFile: /[^\/\\]+\.[^.]+$/.test(i)}, this.find(obj[i], options.cwd), options);
                     }.bind(this));
                 }
             };
@@ -174,9 +177,9 @@ PM.prototype = {
         return this;
     },
     // 列表过滤
-    find: function(str, cwd){
+    find: function(str, cwd, options){
         cwd = cwd || this.options.cwd;
-        return queryFiles.find(str, cwd);
+        return queryFiles.find(str, cwd, options);
     },
     // 文件操作
     fs: require("fs-extra"),
