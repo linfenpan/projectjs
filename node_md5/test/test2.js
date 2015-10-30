@@ -29,12 +29,19 @@ PM.pmd5({
     options: {
         length: 8,
         cwd: "./test/dest",
-        fix: ["html"]
+        fix: ["*"],
+        pm: {
+            basePath: "./"
+        }
     },
     files: ["./css/*"]
 });
 
+PM.clean({
+    files: ["./test/dest/css/*"]
+});
 
-PM.run("pmd5");
+
+PM.run("copy", "clean");
 // 等价于
 // PM.runGroup("static");

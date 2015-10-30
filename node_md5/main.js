@@ -104,8 +104,8 @@ PM.prototype = {
         }.bind(this));
     },
     // 添加插件
-    addPlugins: function(fn){
-        fn.call(this, this);
+    addPlugins: function(fn, name){
+        fn.apply(this, [this].concat([].slice.call(arguments, 1)));
         return this;
     },
     // 设置插件
@@ -163,12 +163,12 @@ PM.prototype = {
             if(list){
                 let resList = list;
                 tasks.push(function(){
-                    fn.call(this, null, this.find(resList, options.cwd), options);
+                    fn.call(this, null, this.find(resList, options.cwd, {matchDir: options.matchDir, onlyDir: options.onlyDir}), options);
                 }.bind(this));
             }else{
                 for(let i in obj){
                     tasks.push(function(){
-                        fn.call(this, {path: i, isFile: /[^\/\\]+\.[^.]+$/.test(i)}, this.find(obj[i], options.cwd), options);
+                        fn.call(this, {path: i, isFile: /[^\/\\]+\.[^.]+$/.test(i)}, this.find(obj[i], options.cwd, {matchDir: options.matchDir, onlyDir: options.onlyDir}), options);
                     }.bind(this));
                 }
             };

@@ -2,8 +2,8 @@
 // 文件的简单复制
 var path = require("path");
 
-module.exports = function(PM){
-    PM.setPlugins("copy", function(target, list, options){
+module.exports = function(PM, name){
+    PM.setPlugins(name || "copy", function(target, list, options){
         // console.log(target, list, options);
         var fs = this.fs;
         var toPath = path.join(options.cwd, target.path);

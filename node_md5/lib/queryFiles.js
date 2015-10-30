@@ -86,7 +86,7 @@ function normalizeQueryPath(str, cwd){
  * @param str {String | RegExp} glob表达式或正则
  * @param dir {String} 当前搜索目录
  * @param cwd {String} 搜索的根目录，如果为 null，则等于 dir
- * @param options {Object} mather 匹配的参数 {mathLast:, matchStart:}
+ * @param options {Object} mather 匹配的参数 {mathLast:, matchStart:, matchDir:是否包含目录, onlyDir:只匹配目录}
  * @return [文件列表]
  */
 function searchFile(str, dir, cwd, options){
@@ -100,12 +100,19 @@ function searchFile(str, dir, cwd, options){
         var absUrl = path.resolve(dir, url);
         // 目录再深入遍历
         // 文件，则进行匹配判断
-        if(fs.statSync(absUrl).isDirectory()){
+        var isDir = fs.statSync(absUrl).isDirectory();
+        var needMatch = isDir ? (!!options.matchDir || options.onlyDir) : true;
+
+        // 只匹配目录，但又不是目录
+        if(options.onlyDir && !isDir){
+            needMatch = false;
+        }
+        if(needMatch && isMatch(str, absUrl, cwd, options)){
+            res.push(absUrl);
+        }
+
+        if(isDir){
             res.push.apply(res, searchFile(str, absUrl, cwd, options));
-        }else{
-            if(isMatch(str, absUrl, cwd, options)){
-                res.push(absUrl);
-            }
         }
     });
 
