@@ -1,17 +1,18 @@
 {
   "name": "project_m_md5",
   "version": "1.0.0",
-  "description": "auto md5 rely files",
+  "description": "文件搜索，任务管理",
   "main": "main.js",
   "directories": {
-    "test": "test"
+    "test": "项目管理"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "md5",
-    "auto"
+    "auto",
+    "search"
   ],
   "author": "da宗熊",
   "license": "MIT",
