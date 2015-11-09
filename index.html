@@ -35,8 +35,13 @@
             text: "For inner data!"
         };
     });
-    require("${basePath}/script/data.js", "${basePath}/script/user.js", "innerData", function(data, user, inner){
-        console.log(data, user, inner);
+    // require("${basePath}/script/data.js", "${basePath}/script/user.js", "innerData", function(data, user, inner){
+    //     console.log(JSON.stringify(data));
+    //     console.log(user)
+    //     console.log(JSON.stringify(inner))
+    // });
+    require("${basePath}/script/data.js", function(data){
+        console.log(JSON.stringify(data), 222);
     });
 </script>
 </html>

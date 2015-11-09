@@ -1,3 +1,5 @@
 define(function(require, exports, module){
-    module.exports = require("../data/data.json");
+    module.exports = function(){
+        return {age:123};
+    }//require("../data/data.json");
 });
