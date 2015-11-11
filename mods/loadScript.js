@@ -30,3 +30,21 @@ function loadScript(src, callback){
     };
 
 };
+
+// 获取当前加载的脚本 URL
+var interactiveScript;
+function getCurrentScript(){
+    // IE6 - 9 的浏览器，script.onload 之后，脚本可能还没执行完成
+    // 判断当前 interactive[未执行完毕] 状态的节点，可知道当前运行的脚本
+    if (interactiveScript && interactiveScript.readyState === "interactive") {
+        return interactiveScript.getAttribute("src");
+    }
+    var scripts = head.getElementsByTagName("script");
+    for (var i = scripts.length - 1; i >= 0; i--) {
+        var script = scripts[i]
+        if (script.readyState === "interactive") {
+            interactiveScript = script
+            return interactiveScript.getAttribute("src");
+        }
+    }
+};

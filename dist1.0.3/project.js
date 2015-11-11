@@ -1,3 +1,187 @@
+/*! By da宗熊 2015-11-11 v1.0.3 https://github.com/linfenpan/projectM.git */
+;(function(window){
+var head = document.head || document.getElementsByTagName("head")[0];
+function loadScript(src, callback){
+    var script = document.createElement("script");
+    script.async = true;
+
+    // 如果支持 onload
+    if("onload" in script){
+        script.onload = onload;
+        script.onerror = function(){
+            console.log("加载失败:" + src);
+            onload(true);
+        }
+    }else{
+        script.onreadystatechange = function(){
+            if(/loaded|complete/.test(script.readyState)){
+                onload();
+            }
+        }
+    };
+
+    script.src = src;
+    head.appendChild(script);
+
+    function onload(error){
+        script.onload = script.onerror = script.onreadystatechange = null;
+        head.removeChild(script);
+        script = null;
+
+        callback(error, src);
+    };
+
+};
+
+// 获取当前加载的脚本 URL
+var interactiveScript;
+function getCurrentScript(){
+    // IE6 - 9 的浏览器，script.onload 之后，脚本可能还没执行完成
+    // 判断当前 interactive[未执行完毕] 状态的节点，可知道当前运行的脚本
+    if (interactiveScript && interactiveScript.readyState === "interactive") {
+        return interactiveScript.getAttribute("src");
+    }
+    var scripts = head.getElementsByTagName("script");
+    for (var i = scripts.length - 1; i >= 0; i--) {
+        var script = scripts[i]
+        if (script.readyState === "interactive") {
+            interactiveScript = script
+            return interactiveScript.getAttribute("src");
+        }
+    }
+};
+
+// 异步请求封装
+var ajax, newAjax;
+if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+    newAjax = function(){
+        return new XMLHttpRequest()
+    };
+}else{// code for IE6, IE5
+    newAjax = function(){
+        return new ActiveXObject("Microsoft.XMLHTTP");
+    }
+};
+
+// 只发送 get 请求
+ajax = function(url, callback){
+    var xmlHttp = newAjax();
+    xmlHttp.onreadystatechange = function(){
+        // 4 = "loaded"
+        // 200 = "OK"
+        if(xmlHttp.readyState == 4){
+            xmlHttp.onreadystatechange = null;
+            if(xmlHttp.status == 200 || xmlHttp.status == 302){
+                console.log("加载成功");
+                callback && callback(false, url, this.responseText, this);
+            }else{
+                console.log("加载失败..");
+                callback && callback(true);
+            }
+        }
+    };
+    // 第 3 个参数，代表：是否异步
+    xmlHttp.open("GET", url, true);
+    // 发送数据
+    xmlHttp.send(null);
+};
+
+// 路径解析
+var path = {};
+// 路径格式化
+path.normal = function(p){
+    // 把 ./a/./b//c/d/../e/ ==> ./a//b//c/d/../e/
+    p = p.replace(/\/\.\//g, "\/\/");
+
+    // 把 ./a//b/c/d/../e/ ==> ./a/b/c/d/../e/
+    p = p.replace(/([^:])\/{2,}/g, "$1\/");
+
+    // 把 ./a/b/c/d/../e/ ==> ./a/b/c/e/
+    p = p.replace(/[^/]+\/\.\.\/([^/]*)/g, "$1");
+
+    return p;
+};
+
+// 是否绝对路径, ftp:// 或 http:// ，不过 // 这种不知道算不算呢?
+path.isAbsolute = function(p){
+    return /:\/\//.test(p);
+};
+
+// 路径合并
+path.join = function(){
+    var p = [].join.call(arguments, "\/");
+    return this.normal(p);
+};
+
+// 目录，http://www.100bt.com 这样的，会有BUG，不过，不理了
+path.dir = function(p){
+    return p.replace(/(.*\/).*$/, "$1");
+};
+
+// 后缀名
+path.ext = function(p){
+    return p.replace(/.*\.(.*)$/, "$1");
+};
+
+// 空函数
+function noop(){};
+// 类型查询
+var typeToString = Object.prototype.toString;
+function queryType(o){
+    return typeToString.call(o).slice(1, -1).split(" ")[1].toLowerCase();
+};
+// 是函数?
+function isFunction(fn){
+    return typeof fn === "function";
+};
+
+// 获取函数内的字符串
+function queryFnInnerText(fn){
+    var str = fn.toString();
+    // 为什么 是 /*! */ 这种注释呢? 因为压缩的时候，可以剔除
+    return str.slice(str.indexOf("/*!") + 3, str.lastIndexOf("*/")).replace(/^[\n\r]*|[\n\r]*$/g, "");
+};
+
+// 遍历
+function each(obj, fn){
+    for(var i in obj){
+        if(obj.hasOwnProperty(i)){
+            fn(i, obj[i], obj);
+        }
+    }
+};
+
+// 数据的复制
+function extend(){
+    var obj = arguments[0] || {}, max = arguments.length - 1, index = 1;
+    var item;
+    do{
+        item = arguments[index] || {};
+        for(var i in item){
+            if(item.hasOwnProperty(i)){
+                obj[i] = item[i];
+            }
+        }
+        index++;
+    }while(index < max);
+    return obj;
+};
+
+// 字符串转 json
+function toJSON(str){
+    return window.JSON ? JSON.parse(str) : (new Function("return "+ str))();
+};
+
+// 简单的模板方法
+function Format(data){
+    var str = "";
+    for(var i in data){
+        str += "var " + i + " = \"" + data[i].toString().replace(/(")/g, "\$1") + "\";\n"
+    };
+    str += 'return str.replace(/\\${([^}]*)}/g, function(str, key){\nreturn eval(key) || "";\n});\n';
+    return new Function("str", str);
+};
+
 var data = {basePath: null}; // 模板数据, basePath: "/"
 var loaded = {};            // 加载完成的脚本
 
@@ -305,3 +489,5 @@ window.require.config = config;
 window.require.addProcesser = addProcesser;
 window.require.addInnerMethod = addInnerRequire;
 window.require.ajax = ajax;
+
+})(window);

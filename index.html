@@ -5,7 +5,7 @@
     <title>脚本项目</title>
 </head>
 <body>
-
+    <div id="test"></div>
 </body>
 
 <script type="text/javascript">
@@ -27,6 +27,7 @@
 <script src="./mods/path.js" charset="utf-8"></script>
 <script src="./mods/main.js" charset="utf-8"></script>
 
+
 <script type="text/javascript">
     define("innerData", function(require, exports, module){
         var $ = require("$");
@@ -35,13 +36,12 @@
             text: "For inner data!"
         };
     });
-    // require("${basePath}/script/data.js", "${basePath}/script/user.js", "innerData", function(data, user, inner){
-    //     console.log(JSON.stringify(data));
-    //     console.log(user)
-    //     console.log(JSON.stringify(inner))
-    // });
     require("${basePath}/script/data.js", function(data){
         console.log(JSON.stringify(data), 222);
     });
+    var $test = document.getElementById("test");
+    require("http://star.guopan.cn/zhubo/js/share/share.js", function(Share){
+        $test.innerHTML = Share.toString();
+    })
 </script>
 </html>
