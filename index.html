@@ -36,12 +36,9 @@
             text: "For inner data!"
         };
     });
-    require("${basePath}/script/data.js", function(data){
-        console.log(JSON.stringify(data), 222);
+    require("${basePath}/script/data.js", "${basePath}/script/user.js", "${basePath}/script/text.js", function(data, user){
+        console.log(data);
+        console.log(user);
     });
-    var $test = document.getElementById("test");
-    require("http://star.guopan.cn/zhubo/js/share/share.js", function(Share){
-        $test.innerHTML = Share.toString();
-    })
 </script>
 </html>
