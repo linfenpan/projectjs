@@ -12,7 +12,9 @@ PS: require 作为关键字，同样不可以被改名，被压缩
 
 # 简单用例
 
-引入 project.js，项目的基本路径，默认是第1个有src的脚本的路径，所以，最好把 project.js 置于第1个脚本。
+引入 project.js，项目的基本路径，默认是当前网址的目录。
+如页面地址为: http://www.test.com/xxx/index.html
+那项目路径，则是: http://www.test.com/xxx/
 
 ``` html
 <script src="project.js" id="projectnode"></script>
@@ -29,7 +31,7 @@ PS: require 作为关键字，同样不可以被改名，被压缩
 // 不完全遵循 cmd 规范，最多接受两个参数，1、板块名字[可缺省] 2、函数
 define(function(require, exports, module){
 	exports.name = "da宗熊";
-    exports.email = "xxx@qq.com";
+	exports.email = "xxx@qq.com";
 });
 ```
 
