@@ -1,7 +1,7 @@
 // 带有信号的 回调
 // 这一块这一版本，废弃掉
 /*
-    var cb = new Callbacks({}, false);
+    var cb = new Callbacks({done: [1, "resolve"], always: 0, fail: [2, "reject"]}, false);
     cb.add(function(){
         console.log("有执行 fire:1 的时候");
     }, 1);
