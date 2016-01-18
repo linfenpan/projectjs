@@ -1,5 +1,14 @@
 var head = document.head || document.getElementsByTagName("head")[0];
+var loadedScriptCBMap = { /** 已经加载的 url，回调函数 map */ };
 function loadScript(src, callback){
+    if (loadedScriptCBMap[src]) {
+        loadedScriptCBMap[src].push(callback);
+        return;
+    }
+
+    // 没加载过
+    loadedScriptCBMap[src] = [callback];
+
     var script = document.createElement("script");
     script.async = true;
 
@@ -26,7 +35,10 @@ function loadScript(src, callback){
         head.removeChild(script);
         script = null;
 
-        callback(error, src);
+        each(loadedScriptCBMap[src], function(index, callback){
+            callback(error, src);
+        });
+        loadedScriptCBMap[src] = "loaded";
     };
 
 };
