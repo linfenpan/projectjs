@@ -1,4 +1,4 @@
-/*! By da宗熊 2016-01-26 v1.0.6 https://github.com/linfenpan/projectM.git */
+/*! By da宗熊 2016-01-27 v1.0.6 https://github.com/linfenpan/projectM.git */
 ;(function(window){
 var head = document.head || document.getElementsByTagName("head")[0];
 var loadedScriptCBMap = { /** 已经加载的 url，回调函数 map */ };
@@ -247,7 +247,7 @@ function config(pro){
             var base = path.dir(node.hasAttribute ? node.src : node.getAttribute("src", 4));
             var rel = node.getAttribute("data-rel")
             if(rel){
-                base = path.join(base, rel);
+                base = path.isAbsolute(rel) ? path.dir(rel) : path.join(base, rel);
             };
             data.basePath = base;
         }else{
@@ -290,7 +290,7 @@ function requireOne(url, callback){
                 }
                 defineRes = null;
                 if(isFunction(res)){
-                    if(res.length == 3){
+                    if(res.length >= 2){
                         // 预先加载
                         parseBeforeExecute(path.dir(url), res, function(fn){
                             var mod = {exports: {}};

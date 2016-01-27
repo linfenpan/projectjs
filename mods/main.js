@@ -51,7 +51,7 @@ function config(pro){
             var base = path.dir(node.hasAttribute ? node.src : node.getAttribute("src", 4));
             var rel = node.getAttribute("data-rel")
             if(rel){
-                base = path.join(base, rel);
+                base = path.isAbsolute(rel) ? path.dir(rel) : path.join(base, rel);
             };
             data.basePath = base;
         }else{
@@ -94,7 +94,7 @@ function requireOne(url, callback){
                 }
                 defineRes = null;
                 if(isFunction(res)){
-                    if(res.length == 3){
+                    if(res.length >= 2){
                         // 预先加载
                         parseBeforeExecute(path.dir(url), res, function(fn){
                             var mod = {exports: {}};
