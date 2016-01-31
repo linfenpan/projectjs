@@ -8,37 +8,94 @@
     <div id="test"></div>
 </body>
 
+<!-- <script src="./mods/global.js" charset="utf-8"></script>
+<script src="./mods/path.js" charset="utf-8"></script>
+<script src="./mods/scriptLoader.js" charset="utf-8"></script>
+<script src="./mods/pXMLHttpRequest.js" charset="utf-8"></script>
+<script src="./mods/main_global.js" charset="utf-8"></script>
+<script src="./mods/main_config.js" charset="utf-8"></script>
+<script src="./mods/main_define.js" charset="utf-8"></script>
+<script src="./mods/main_require.js" charset="utf-8"></script>
+<script src="./mods/main_interface.js" charset="utf-8"></script> -->
+
+<script src="./project.min.js" charset="utf-8"></script>
+
 <script type="text/javascript">
-    window.$ = "哈哈哈";
-    var Project = {
-        path: {
-            basePath: "./demo/"
-        },
-        other: {
-            "$": window.$
-        }
-    };
+function toJSON(json){
+    return window.JSON ? window.JSON.parse(json) : (new Function("return " + json))();
+};
 </script>
 
-<script src="./mods/utils.js" charset="utf-8"></script>
-<script src="./mods/Callbacks.js" charset="utf-8"></script>
-<script src="./mods/pXMLHttpRequest.js" charset="utf-8"></script>
-<script src="./mods/loadScript.js" charset="utf-8"></script>
-<script src="./mods/path.js" charset="utf-8"></script>
-<script src="./mods/main.js" charset="utf-8"></script>
-
-
 <script type="text/javascript">
-    define("innerData", function(require, exports, module){
-        var $ = require("$");
-        console.log($);
-        module.exports = {
-            text: "For inner data!"
-        };
+    // 允许分开配置
+    require.config({ basePath: "./test/" });
+    require.config({
+        template: {
+            data4: "data4.js"
+        },
+        alias: {
+            author: "da宗熊"
+        }
     });
-    require("${basePath}/script/data.js", "${basePath}/script/user.js", "${basePath}/script/text.js", function(data, user){
+
+    require("./data1.js", function(data){
+        console.assert(data, "require(\"moduleA\", function(){}); 失败");
         console.log(data);
-        console.log(user);
+    });
+    require("./data2.js", function(data){
+        console.assert(data, "require(\"具体内容\", function(){}); 失败");
+        console.log(data);
+    });
+
+    define("inner", "测试 define(module, text) 功能");
+    require("inner", function(inner){
+        console.assert(inner, "define(\"module\", {}); 失败")
+        console.log(inner);
+    });
+    require("./data3.js", function(data){
+        console.assert(data, "require加载的脚本中，define(content)，不通过");
+        console.log(data);
+    });
+
+    require("./{data4}", function(data){
+        console.assert(data, "require.config({ template: {} });，不通过");
+        console.assert(data.author, "require.config({ alias: {} });，不通过");
+        console.log(data);
+    });
+    require("./data5.js", function(data){
+        console.assert(data.inner, "加载的脚本内，多个define不通过");
+        console.assert(data.outer, "define()，不能加载外部脚本");
+        console.log(data);
+    });
+
+    require("./data6.js", function(data){
+        data.async(function(pass){
+            console.assert(pass, "define中,require(module, callback)异步功能失败");
+            console.log(pass);
+            console.log("data6 这句话在后面[测异步]");
+        });
+        console.log("data6 这句话在前面[测异步]");
+    });
+
+    require("./data7.json", function(json){
+        json = json ? toJSON(json) : null;
+        console.assert(json, "ajax加载内容失败");
+        console.log(json);
+    });
+    require("data8.js", function(data){
+        console.assert(data, "define中，require加载ajax内容失败");
+        console.log(data);
+    });
+
+    console.log("样式路径:" + require.url("data9.css"));
+    require.css("data9.css");
+    setTimeout(function(){
+        console.assert(document.getElementById("test").clientWidth === 200, "样式加载失败");
+    }, 200);
+
+    require("data10.js", function(data){
+        console.assert(data.url, "define中的require.url功能不通过");
+        console.log("data10路径:" + data.url);
     });
 </script>
 </html>

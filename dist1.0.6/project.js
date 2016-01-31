@@ -292,7 +292,7 @@ function requireOne(url, callback){
                 if(isFunction(res)){
                     if(res.length >= 2){
                         // 预先加载
-                        parseBeforeExecute(path.dir(url), res, function(fn){
+                        parseBeforeExecute(path.isAbsolute(url) ? path.dir(url) : data.basePath, res, function(fn){
                             var mod = {exports: {}};
                             res(createiRequire(url), mod.exports, mod);
                             res = mod.exports;
@@ -411,7 +411,7 @@ function parseBeforeExecute(dir, fn, callback){
 // 内置的 require，需要修复一次路径
 var cssMap = {};
 function createiRequire(url){
-    var dir = path.dir(url);
+    var dir = path.isAbsolute(url) ? path.dir(url) : data.basePath;
     function ir(url, callback){
         // 名字 或 绝对路径
         var absoluteUrl = concatFilePath(url, dir), args = arguments;

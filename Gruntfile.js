@@ -12,7 +12,10 @@ module.exports = function(grunt) {
                 footer: '\n})(window);'
             },
             build: {
-                src: ['mods/loadScript.js', 'mods/pXMLHttpRequest.js', 'mods/path.js', 'mods/utils.js', 'mods/main.js'],
+                src: [
+                    'mods/global.js', 'mods/path.js', 'mods/scriptLoader.js', 'mods/pXMLHttpRequest.js',
+                    'mods/main_global.js', 'mods/main_config.js', 'mods/main_define.js', 'mods/main_require.js', 'mods/main_interface.js'
+                ],
                 dest: '<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.js',
             }
         },
@@ -20,13 +23,20 @@ module.exports = function(grunt) {
             options: {
                 // banner: '/*! By <%= pkg.author %> <%= grunt.template.today("yyyy-mm-dd") %> v<%= pkg.version %> */\n;',
                 preserveComments: 'some',
+                mangle: {
+                    eval: true
+                },
                 compress: {
                     // 删除所有 console
+                    sequences: true,
                     drop_console: true,
 					conditionals: true,
 					booleans: true,
 					loops: true,
-					join_vars: true
+					join_vars: true,
+                    dead_code: true,
+                    if_return: true,
+                    keep_fargs: false
                 }
             },
             build: {
@@ -37,8 +47,8 @@ module.exports = function(grunt) {
         copy: {
             dist: {
                 src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.min.js",
-                dest: "./demo/<%= pkg.scriptName %>.min.js"
-            }
+                dest: "./<%= pkg.scriptName %>.min.js"
+           }
         }
     });
 

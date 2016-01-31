@@ -1,4 +1,4 @@
-var head = document.head || document.getElementsByTagName("head")[0];
+var eHead = document.head || document.getElementsByTagName("head")[0];
 var loadedScriptCBMap = { /** 已经加载的 url，回调函数 map */ };
 function loadScript(src, callback){
     if (loadedScriptCBMap[src]) {
@@ -28,11 +28,11 @@ function loadScript(src, callback){
     };
 
     script.src = src;
-    head.appendChild(script);
+    eHead.appendChild(script);
 
     function onload(error){
         script.onload = script.onerror = script.onreadystatechange = null;
-        head.removeChild(script);
+        eHead.removeChild(script);
         script = null;
 
         each(loadedScriptCBMap[src], function(index, callback){
@@ -51,7 +51,7 @@ function getCurrentScript(){
     if (interactiveScript && interactiveScript.readyState === "interactive") {
         return interactiveScript.getAttribute("src");
     }
-    var scripts = head.getElementsByTagName("script");
+    var scripts = eHead.getElementsByTagName("script");
     for (var i = scripts.length - 1; i >= 0; i--) {
         var script = scripts[i]
         if (script.readyState === "interactive") {

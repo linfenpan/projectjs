@@ -1,15 +1,3 @@
-// 空函数
-function noop(){};
-// 类型查询
-var typeToString = Object.prototype.toString;
-function queryType(o){
-    return typeToString.call(o).slice(1, -1).split(" ")[1].toLowerCase();
-};
-// 是函数?
-function isFunction(fn){
-    return typeof fn === "function";
-};
-
 // 获取函数内的字符串
 function queryFnInnerText(fn){
     var str = fn.toString();

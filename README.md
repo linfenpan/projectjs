@@ -1,13 +1,19 @@
-# 功能简要说明
+# 初衷
 
 项目地址: [projectM](https://github.com/linfenpan/projectM)
 
-模仿sea.js编写的脚本，只有 require 和 define 两个方法。
-考虑到 sea.js 本身的 require，并不能加载样式、外部html结构等，所以，在此进行了改进，并提供了相关的解决方案。
+无论require.js还是sea.js，都并不完全满足日常的项目开发，为此，模仿编写了此项目。
+如要使用或测试，请用最新版
 
-并不完全遵循 cmd 规范，为了满足 **跨域** 读取资源的需求，定义了额外的define规则。
+功能介绍:
 
-PS: require 作为关键字，同样不可以被改名，被压缩
+	1. require 进行模块加载
+	2. define 进行模块定义
+	3. require.ajax 在简单项目中，替代zepto的$.ajax
+	4. require.css 进行样式加载
+	5. require.loadScript 进行脚本加载
+
+注:  require 作为关键字，不可被压缩、更改名字
 
 
 # 简单用例
@@ -17,7 +23,7 @@ PS: require 作为关键字，同样不可以被改名，被压缩
 那项目路径，则是: http://www.test.com/xxx/
 
 ``` html
-<script src="project.js" id="projectnode"></script>
+<script src="project.js" id="seedNode"></script>
 <script>
 	require("./script/user.js", function(user){
       console.log("获取到用户信息", user);	// ==> {name: "", email: ""}
@@ -35,226 +41,121 @@ define(function(require, exports, module){
 });
 ```
 
-# define的使用
+# define
 
-1、板块定义
-
+用于定义模块，其使用遵循此格式:  define([moduleName,] content);
+其中，moduleName 可忽略。
+如:
 ``` javascript
 define(function(require, exports, module){
-	// 后缀的 .js 不能省略
-	var data = require("../data/data.js");
-	module.exports = {/*外部可见的内容*/}
+	/** 其中，如果用不到exports和module，在声明中可去掉 **/
+});
+// or
+define("也可以是非function的任意内容");
+```
+moduleName的默认值，将会是此脚本的路径。
+
+在 define 中，用到的require函数，将会基于当前moduleName[即脚本路径]进行寻址。
+有 http://www.test.com/script/test.js
+``` javascript
+define(function(require){
+	var data1 = require("./data.js");    // 将会同步加载 http://www.test.com/script/data.js
+	require("./data2.js", function(){ /* data2.js 会异步加载 */ });
 });
 ```
 
-2、可指定名字
-
+如果显式指定了 moduleName，则不会被识别为模块脚本，也不会进行任何寻址操作:
 ``` javascript
-define("user", function(require, exports, module){
-	// 内容定义...
+define("data", function(require){
+	var user = require("user.js");    // 错误，user将不能获取到任何内容
 });
+require("data");    // define("data") 不会被执行
 ```
-外部可 require("user") 使用，不用填充路径
-
-3、加载同域内容
-
+正确使用，该如下:
 ``` javascript
-define(function(require, exports, module){
-	var css = require("./user.css");	// 作为文本，被加载进来
-});
-```
-
-4、定义其它内容
-
-``` javascript
-define({name: "", email: ""});
-// 或
-define("xxxyyy");
-// 或
-define(true);
-```
-
-5、加载任意内容
-
-``` javascript
-// function 内，必须没有require等参数
-define("text", function(){
-/*!
-	这里的内容，会被返回咧~~，最前面的 ! 不能省略，如果参数小于3，则会把这里的所有内容返回
-	特别用于加载 html、css 或 多行文字 的内容，最合适不过了
-*/
-});
-```
-外部使用:
-``` javascript
-require("text", function(text){
-	text === "这里的内容，会被.......";
-});
-```
-
-6、获取绝对路径
-
-``` javascript
-define(function(require, exports, module){
-	var url = require.url("./data.json");   // 获取的是，data.json的绝对路径
-});
-```
-
-7、define中异步加载
-
-``` javascript
-define(function(require, exports, module){
-	// 仅且只能异步加载 1 个内容
-	require("./data.json", function(data){
-   		// 这里是异步执行的内容
-   	});
-   // 或者，通过 async 加载多个内容
-   require.async("./data.json", "./user.js", function(data, user){
-		// 异步执行的内容
+function data(){
+	require("user.js", function(user){
+		console.log(user);   // 正确获取
 	});
+};
+define("data", data);
+require("data")();	// require("data") 将返回 function data(){};
+```
+
+# require
+
+用于加载一个或多个模块。用法如下: require(module1, [module2, module3, ...], callback?);
+其中，callback 可以省略。
+
+require 默认都是异步加载的，仅且一种情况下，require可“当作”同步加载使用:
+``` javascript
+define(function(require){
+	var user = require("user.js");   // 此行代码，将会同步返回 user.js 的内容
+	// 注意:
+	require("doSomething.js");       // doSomething.js 内容，在运行此行代码前，早已被调用了，此时在此处的，将是 exports 中设置的内容
 });
 ```
+如果 require 最后，跟着callback，模块将会异步加载。
 
-# require 的使用
+在 require 中，有几个实用的工具方法:
 
-在 define 中的 require 和 在 window 下的 require，是不一样的。在window下的require，只有1个作用，异步加载内容【或者说，作为程序的入口】
-
-1、window下
-
-``` javascript
-// 都是 异步 加载脚本
-require("./data.js");   // OK
-require("./data.js", function(data){});   // OK
-require("./data1.js", "./data2.js");   // OK
-require("./data1.js", "./data2.js", function(data1, data2){}); // OK
-```
-但是，window.require下，并没有注入 url/css/async 等方法
-
-``` javascript
-require.url("./data.js"); // ERROR
-require.async("./data.js"); // ERROR
-require.css("./data.css"); // ERROR
-```
-
-2、define下
-
-``` javascript
-define(function(require, exports, module){
-	// OK，同步返回内容
-	var data = require("./data.js");
-
-	// OK，异步执行 fn，注: 如果 ./data.js 已加载，则会同步执行  
-	require("./data.js", function(data){});   
-	// OK，异步加载两个脚本
-	require("./data1.js", "./data2.js");
-	// OK，异步加载脚本，并执行回调
-	require("./data1.js", "./data2.js", function(data1, data2){});
-});
-```
-define中，require注入了额外的几个方法:
-```javascript
-define(function(require, exports, module){
-	// 返回 data.js 的绝对路径
-	var url = require.url("./data.js");
-
-	// 异步加载 data.js，等同于 require("./data.js", function(){});
-	require.async("./data.js");
-
-	// document中，加载data.css【生成link标签，不会重复加载】
-	require.css("./data.css");
-});
-```
+	1. require.css("./data.css"); 根据当前模块路径，加载相关样式，做了简单的防重复加载
+	2. require.url("./data.json"); 根据模块路径，返回文件路径
 
 
 
-# 项目配置
 
-在引入 project.js 前【这里比较懒，并没有做 dom ready 的判定】，如果定义有 window.Project 变量，则可对 project.js 进行配置。
+# 寻址路径
 
+项目路径，默认是当前访问地址的根目录。可通过设置 id="seedNode"，来指定根据 project.js 所在目录作为基础路径。
 ``` html
-<script>
-var Project = {
-	path: {
-		// 路径的模板数据
-		basePath: "./",    // 项目的根路径，不配置，默认查找 id=projectnode 的脚本
-	},
-	other: {
-		$: window.jQuery
+<script src="http://www.test.com/js/project.min.js" id="seedNode"></script>
+```
+板块的初始加载路径，将会是:  http://www.test.com/js/
+
+也可以通过配置，进行配置：
+``` javascript
+require.config({ basePath: "http://www.test.com/script/" });
+```
+如果 basePath 是相对路径，则:
+
+	1. 不存在 seedNode ⇒ 页面访问路径 + 相对路径 = 初始加载路径
+	2. 存在 seedNode ⇒ project.js所在的目录 + 相对路径 = 初始加载路径
+
+
+# 模板
+
+通过  require.config({ template: {} }); 配置路径模板，如:
+
+``` javascript
+require.config({
+	template: {
+		stat: "./wap/stat.js"
 	}
-}
-</script>
-<script src="project.js" id="projectnode"></script>
+});
+
+require("{stat}");  // 将加载 ./wap/stat.js
 ```
-或者，通过 require.config 代替 Project 变量:
-``` javascript
-<script src="project.js" id="projectnode"></script>
-<script>
-	require.config({/**参考 window.Project*/});
-</script>
+主要针对脚本打指纹之后的寻址。
+
+
+# 别名
+
+通过 require.config({  alias: {} }); 进行别名制定，特别针对非模块化的脚本，会特别有用，如:
+
 ```
-
-1、path： 路径模板配置
-
-* basePath: 特殊关键字，项目的根路径，所有require都根据此根路径，进行查找。
-
-此配置，用于某些特殊场景，如需要给一些域名，添加一个别名，可以这样子:
-
-``` javascript
-var Project = {
-	path: {
-		baidu: "http://www.baidu.com/",
-		version: "0.0.2"
+require.config({
+	alias: {
+		"jquery": window.jQuery
 	}
-};
+});
+
+require("jquery", function($){
+	// $ -> window.jQuery
+});
 ```
-在require的时候，我们就可以使用以下写法:
-``` javascript
-require("${baidu}");
-require("${baidu}/user.js?${version}");  //===> http://www.baidu.com/user.js?0.0.2
-```
-
-2、other：板块
-
-某些板块，可能不遵循 define 的定义，可以通过 other 配置，为其指定一个可访问的名称，如:
-``` javascript
-Project = {
-	other: {
-		"$": window.jQuery
-	}
-};
-```
-在define中，使用如下:
-```javascript
-var $ = require("$"); // => 拿到了 window.jQuery
-```
-
-# 基础路径
-
-对于require寻找资源的基础路径，基于几个简单的原则【如当前页面地址是 http://www.test.com/demo/index.html 】:
-
-1)  有设置 basePath属性: basePath是绝对路径目录，采用此路径；是相对路径，根据当前链接，拼接相对路径的值，查找到绝对目录
-```javascript
-require.config({path: {basePath: "http://www.guopan.com/"}});
-```
-basePath === "http://www.guopan.com/";
-
-2) 没有basePath，有id=projectnode的脚本: 使用此脚本所在目录的绝对路径；如果有data-rel属性，则脚本所在的目录的绝对路径，拼接data-rel的值，得出新的绝对目录路径。
-```html
-<script id="projectnode" data-rel="../data" src="./project.js"></script>
-```
-basePath === "http://www.test.com/data/";
-
-3) 均没设置: 采用当前链接的目录绝对路径
-
-basePath === "http://www.test.com/demo/";
 
 
 # 结语
 
-这次项目，仅针对普通的手机、PC浏览器，其余的，并没考虑。因为比较喜欢 sea.js 和 require.js，两者结合了一下，抱着学习的心态，就完成了这玩意儿。
-
-不写不知道，原以为很多知识点，自己都知道，没什么大不了的，预计1天完成的功能，写了整整3天。其中太多太多一知半解的东西了。
-
-读万卷书，不如行万里路。
-
-如果有BUG，请联系 [da宗熊]  1071093121@qq.com
+持续优化中，如有BUG，联系 [da宗熊]  1071093121@qq.com
