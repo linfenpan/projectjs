@@ -1,5 +1,4 @@
-var loadScript = null;
-var getCurrentScriptUrl = null;
+var loadScript, getCurrentScriptUrl;
 
 // 脚本下载
 ;(function(window){

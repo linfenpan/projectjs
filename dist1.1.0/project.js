@@ -95,8 +95,7 @@ path.ext = function(uri){
     return uri.replace(/.*\.(.*)$/, "$1");
 };
 
-var loadScript = null;
-var getCurrentScriptUrl = null;
+var loadScript, getCurrentScriptUrl;
 
 // 脚本下载
 ;(function(window){
