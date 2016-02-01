@@ -113,5 +113,15 @@ function toJSON(json){
         console.assert(data12, "模块加载: 多次 define(methodA, fnc)，不通过");
         console.log("测试多次define(method, func):" + data12);
     });
+
+    require("./data13.js", function(data13){
+        console.assert(!data13, "模块加载: 没有define不该有内容，不通过");
+        console.log("data13应该没有内容:", data13);
+    });
+
+    require("./data14.js", function(data14){
+        console.assert(!data14, "模块加载: 没有模块出口，不该有内容，不通过");
+        console.log("data14应该没有内容:", data14);
+    });
 </script>
 </html>
