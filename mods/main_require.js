@@ -61,10 +61,10 @@ function require(){
         callback = noop;
     }
 
-    loadAllModule(requireBasePath, modules, callback);
+    loadAllModules(requireBasePath, modules, callback);
 };
 
-function loadAllModule(dirPath, modules, callback){
+function loadAllModules(dirPath, modules, callback){
     var args = [];
     var modulesCount = modules.length;
     each(modules, function(module, index){
@@ -184,7 +184,7 @@ function anlyseFunctionRely(url, exports, callback){
     // 3. 加载依赖模块
     // 4. 执行 exports 得到最后的 结果
     var moduleDirPath = path.dir(url);
-    loadAllModule(moduleDirPath, needLoadModules, function(){
+    loadAllModules(moduleDirPath, needLoadModules, function(){
         var module = {exports: {}, url: url};
         exports(createDefineRequire(moduleDirPath), module.exports, module);
         callback(module.exports);

@@ -48,13 +48,13 @@ function toJSON(json){
         console.log(data);
     });
 
-    define("inner", "测试 define(module, text) 功能");
+    define("inner", "内联脚本中，define(module, text) 功能");
     require("inner", function(inner){
-        console.assert(inner, "define(\"module\", {}); 失败")
+        console.assert(inner, "内联脚本，模块定义: define(module, text)，不通过")
         console.log(inner);
     });
     require("./data3.js", function(data){
-        console.assert(data, "require加载的脚本中，define(content)，不通过");
+        console.assert(data, "模块定义: define(content)，不通过");
         console.log(data);
     });
 
@@ -64,27 +64,28 @@ function toJSON(json){
         console.log(data);
     });
     require("./data5.js", function(data){
-        console.assert(data.inner, "加载的脚本内，多个define不通过");
-        console.assert(data.outer, "define()，不能加载外部脚本");
+        console.assert(data.inner, "模块加载: 多个define, 不通过");
+        console.assert(data.outer, "模块加载: 加载外部脚本, 不通过");
         console.log(data);
     });
 
     require("./data6.js", function(data){
+        var canAsync = false;
         data.async(function(pass){
-            console.assert(pass, "define中,require(module, callback)异步功能失败");
+            console.assert(pass, "异步加载: require(url, callback), 不通过");
+            console.assert(canAsync, "异步加载: require(url, callback), 没有异步执行");
             console.log(pass);
-            console.log("data6 这句话在后面[测异步]");
         });
-        console.log("data6 这句话在前面[测异步]");
+        canAsync = true;
     });
 
     require("./data7.json", function(json){
         json = json ? toJSON(json) : null;
-        console.assert(json, "ajax加载内容失败");
+        console.assert(json, "ajax加载: 不通过");
         console.log(json);
     });
     require("data8.js", function(data){
-        console.assert(data, "define中，require加载ajax内容失败");
+        console.assert(data, "模块加载: 加载 ajax 内容，不通过");
         console.log(data);
     });
 
@@ -92,10 +93,10 @@ function toJSON(json){
     require.css("data9.css");
     setTimeout(function(){
         console.assert(document.getElementById("test").clientWidth === 200, "样式加载失败");
-    }, 200);
+    }, 500);
 
     require("data10.js", function(data){
-        console.assert(data.url, "define中的require.url功能不通过");
+        console.assert(data.url, "require.url: 不通过");
         console.log("data10路径:" + data.url);
     });
 
@@ -104,12 +105,12 @@ function toJSON(json){
         module.exports = data11;
     });
     require("innerRequire", function(pass){
-        console.assert(pass, "内联脚本的 define中，require功能不通过");
+        console.assert(pass, "内联脚本: require功能, 不通过");
         console.log("内联脚本define，require加载data11.js:" + pass);
     });
 
     require("./data12.js", function(data12){
-        console.assert(data12, "多次define(methodA, fnc) 功能失败");
+        console.assert(data12, "模块加载: 多次 define(methodA, fnc)，不通过");
         console.log("测试多次define(method, func):" + data12);
     });
 </script>
