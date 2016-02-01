@@ -27,8 +27,9 @@ function toJSON(json){
 </script>
 
 <script type="text/javascript">
+
     // 允许分开配置
-    require.config({ basePath: "./test/" });
+    require.config({ basePath: "test" });
     require.config({
         template: {
             data4: "data4.js"
@@ -96,6 +97,20 @@ function toJSON(json){
     require("data10.js", function(data){
         console.assert(data.url, "define中的require.url功能不通过");
         console.log("data10路径:" + data.url);
+    });
+
+    define("innerRequire", function(require, exports, module){
+        var data11 = require("./data11.js");
+        module.exports = data11;
+    });
+    require("innerRequire", function(pass){
+        console.assert(pass, "内联脚本的 define中，require功能不通过");
+        console.log("内联脚本define，require加载data11.js:" + pass);
+    });
+
+    require("./data12.js", function(data12){
+        console.assert(data12, "多次define(methodA, fnc) 功能失败");
+        console.log("测试多次define(method, func):" + data12);
     });
 </script>
 </html>

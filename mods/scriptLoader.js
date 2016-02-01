@@ -3,7 +3,7 @@ var getCurrentScriptUrl = null;
 
 // 脚本下载
 ;(function(window){
-    var loadedMap = {};
+    var loadedMap = {  };
 
     function _loadScript(src, callback){
         if (loadedMap[src]) {
@@ -15,7 +15,7 @@ var getCurrentScriptUrl = null;
     };
 
     function createScript(src){
-        var script = document.createElement("script");
+        var script = winDocument.createElement("script");
         script.async = true;
 
         // 如果支持 onload
@@ -56,13 +56,14 @@ var getCurrentScriptUrl = null;
     function _getCurrentScriptUrl(){
         // IE6 - 9 的浏览器，script.onload 之后，脚本可能还没执行完成
         // 判断当前 interactive[未执行完毕] 状态的节点，可知道当前运行的脚本
-        if (interactiveScript && interactiveScript.readyState === "interactive") {
+        var interactiveState = "interactive";
+        if (interactiveScript && interactiveScript.readyState == interactiveState) {
             return interactiveScript.getAttribute("src");
         }
         var scripts = eHead.getElementsByTagName("script");
         for (var i = scripts.length - 1; i >= 0; i--) {
             var script = scripts[i]
-            if (script.readyState === "interactive") {
+            if (script.readyState == interactiveState) {
                 interactiveScript = script
                 return interactiveScript.getAttribute("src");
             }

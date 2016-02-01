@@ -1,5 +1,5 @@
-var document = window.document;
-var eHead = document.head || document.getElementsByTagName("head")[0];
+var winDocument = window.document;
+var eHead = winDocument.head || winDocument.getElementsByTagName("head")[0];
 
 var internalToString = Object.prototype.toString;
 var internalSlice = [].slice;
@@ -55,3 +55,8 @@ function combine(){
 function trim(str){
     return str.replace(/^\s*|\s*$/g, "");
 };
+
+// 绝对路径?
+function isAbsolute(url){
+    return path.isAbsolute(url);
+}

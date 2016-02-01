@@ -24,7 +24,7 @@ var requireConfig;
             requireBasePath = path.dir(pageURL);
 
             // 如果有 seedNode，则基于 seedNode 进行寻址
-            var scriptNode = document.getElementById("seedNode");
+            var scriptNode = winDocument.getElementById("seedNode");
             if (scriptNode) {
                 // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
                 var scriptSrc = path.dir(scriptNode.hasAttribute ? scriptNode.src : scriptNode.getAttribute("src", 4));
@@ -33,10 +33,10 @@ var requireConfig;
             scriptNode = null;
 
             if (basePath) {
-                if (path.isAbsolute(basePath)) {
+                if (isAbsolute(basePath)) {
                     requireBasePath = basePath;
                 } else {
-                    requireBasePath = path.join(path.dir(pageURL), basePath);
+                    requireBasePath = path.join(path.dir(pageURL), basePath, "/");
                 }
             }
         }

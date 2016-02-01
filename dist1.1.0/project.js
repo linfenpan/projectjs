@@ -1,7 +1,7 @@
-/*! By da宗熊 2016-01-31 v1.1.0 https://github.com/linfenpan/projectM.git */
+/*! By da宗熊 2016-02-01 v1.1.0 https://github.com/linfenpan/projectM */
 ;(function(window){
-var document = window.document;
-var eHead = document.head || document.getElementsByTagName("head")[0];
+var winDocument = window.document;
+var eHead = winDocument.head || winDocument.getElementsByTagName("head")[0];
 
 var internalToString = Object.prototype.toString;
 var internalSlice = [].slice;
@@ -58,6 +58,11 @@ function trim(str){
     return str.replace(/^\s*|\s*$/g, "");
 };
 
+// 绝对路径?
+function isAbsolute(url){
+    return path.isAbsolute(url);
+}
+
 // 路径解析
 var path = {};
 // 路径格式化
@@ -95,7 +100,7 @@ var getCurrentScriptUrl = null;
 
 // 脚本下载
 ;(function(window){
-    var loadedMap = {};
+    var loadedMap = {  };
 
     function _loadScript(src, callback){
         if (loadedMap[src]) {
@@ -107,7 +112,7 @@ var getCurrentScriptUrl = null;
     };
 
     function createScript(src){
-        var script = document.createElement("script");
+        var script = winDocument.createElement("script");
         script.async = true;
 
         // 如果支持 onload
@@ -148,13 +153,14 @@ var getCurrentScriptUrl = null;
     function _getCurrentScriptUrl(){
         // IE6 - 9 的浏览器，script.onload 之后，脚本可能还没执行完成
         // 判断当前 interactive[未执行完毕] 状态的节点，可知道当前运行的脚本
-        if (interactiveScript && interactiveScript.readyState === "interactive") {
+        var interactiveState = "interactive";
+        if (interactiveScript && interactiveScript.readyState == interactiveState) {
             return interactiveScript.getAttribute("src");
         }
         var scripts = eHead.getElementsByTagName("script");
         for (var i = scripts.length - 1; i >= 0; i--) {
             var script = scripts[i]
-            if (script.readyState === "interactive") {
+            if (script.readyState == interactiveState) {
                 interactiveScript = script
                 return interactiveScript.getAttribute("src");
             }
@@ -186,7 +192,7 @@ var ajax;
         });
         search = search.join("&");
         if (search) {
-            search = (url.indexOf("?") > -1 ? "&" : "?") + search;
+            search = (/\?/.test(url) ? "&" : "?") + search;
         }
         return url + search;
     };
@@ -208,7 +214,8 @@ var ajax;
             // 200 = "OK", 302 = "not modify"
             if (xmlHttp.readyState == 4) {
                 xmlHttp.onreadystatechange = null;
-                if (xmlHttp.status == 200 || xmlHttp.status == 302) {
+                var status = xmlHttp.status;
+                if (status == 200 || status == 302) {
                     callback(false, this.responseText, this, url);
                 } else {
                     callback(true);
@@ -244,13 +251,15 @@ var requireBasePath = null;
 var requireLoadedModule = {  };
 // require 中，设置的module依赖别名
 var requireModuleAlias = {  };
+// require 中，最近加载的链接
+var requireRecentLoadUrl = null;
 // 模块状态
 var FINISH = 1, LOADING = 0;
 
 // 当require加载板块时，如果新板块有 define 函数，则会把 define 的结构，记录在这里
 var defineResult = null;
 // 怪异的 define 模式，在此模式下，js加载完成后，并不会立刻运行
-var isScriptExecuteDelayMode = !!document.attachEvent;
+var isScriptExecuteDelayMode = !!winDocument.attachEvent;
 
 // @require("main_global.js");
 
@@ -278,7 +287,7 @@ var requireConfig;
             requireBasePath = path.dir(pageURL);
 
             // 如果有 seedNode，则基于 seedNode 进行寻址
-            var scriptNode = document.getElementById("seedNode");
+            var scriptNode = winDocument.getElementById("seedNode");
             if (scriptNode) {
                 // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
                 var scriptSrc = path.dir(scriptNode.hasAttribute ? scriptNode.src : scriptNode.getAttribute("src", 4));
@@ -287,10 +296,10 @@ var requireConfig;
             scriptNode = null;
 
             if (basePath) {
-                if (path.isAbsolute(basePath)) {
+                if (isAbsolute(basePath)) {
                     requireBasePath = basePath;
                 } else {
-                    requireBasePath = path.join(path.dir(pageURL), basePath);
+                    requireBasePath = path.join(path.dir(pageURL), basePath, "/");
                 }
             }
         }
@@ -321,7 +330,9 @@ function define(moduleName, func){
 
 function defineWithName(moduleName, func){
     var module = getRequireModule(moduleName);
-    module.state = FINISH;
+    if (!isFunction(func)) {
+        module.state = FINISH;
+    }
     module.exports = func;
 };
 
@@ -376,7 +387,7 @@ function getModule(url){
 // 获取 module 的绝对路径
 function getModuleAbsURL(url, dirPath){
     url = template(url, requireTemplateData);
-    if (path.isAbsolute(url)) {
+    if (isAbsolute(url)) {
         return url;
     } else {
         return path.join(dirPath || requireBasePath, url);
@@ -446,9 +457,21 @@ function loadModule(moduleName, callback){
         return callback(module.exports, module);
     }
 
-    var extname = path.ext(moduleName).toLowerCase();
-    var loadFn = moduleLoader[extname] || moduleLoader["_"];
-    loadFn(moduleName, function(loadedData){
+    var extname, loadFn;
+    if (isAbsolute(moduleName)) {
+        extname = path.ext(moduleName).toLowerCase();
+        loadFn = moduleLoader[extname] || moduleLoader["_"];
+    } else {
+        module.url = requireRecentLoadUrl || requireBasePath;
+        extname = "js";
+        loadFn = function(name, callback){
+            defineResult = module.exports;
+            callback();
+        };
+    }
+    // var extname = path.ext(moduleName).toLowerCase();
+    // var loadFn = moduleLoader[extname] || moduleLoader["_"];
+    loadFn(module.url, function(loadedData){
         switch (extname) {
             case "js":
                 if (module.state !== FINISH) {
@@ -469,6 +492,7 @@ function loadModule(moduleName, callback){
 };
 
 function scriptLoadedFinish(url, callback){
+    requireRecentLoadUrl = isAbsolute(url) ? url : requireBasePath;
     var module = getModule(url);
     if (isScriptExecuteDelayMode) {
         defineResult = module.exports;
@@ -545,6 +569,7 @@ var moduleLoader = {
     js: function(url, callback){
         loadScript(url, function(error){
             if (error) {
+                callback();
                 throw "load `"+ url +"` fail!";
             } else {
                 callback();
@@ -554,6 +579,7 @@ var moduleLoader = {
     _: function(url, callback){
         ajax(url, function(error, json){
             if (error) {
+                callback();
                 throw "load `"+ url +"` fail!";
             } else {
                 callback(json);
@@ -578,7 +604,7 @@ function extendRequire(require, dirPath){
 var linkLoadedMap = {};
 function loadLink(href){
     if (!linkLoadedMap[href]) {
-        var link = document.createElement("link");
+        var link = winDocument.createElement("link");
         link.rel = "stylesheet";
         link.href = href;
         eHead.appendChild(link);

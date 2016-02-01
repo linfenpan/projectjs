@@ -55,7 +55,7 @@ define("也可以是非function的任意内容");
 ```
 moduleName的默认值，将会是此脚本的路径。
 
-在 define 中，用到的require函数，将会基于当前moduleName[即脚本路径]进行寻址。
+在 define 中，用到的require函数，将会基于当前 脚本目录 进行寻址。
 有 http://www.test.com/script/test.js
 ``` javascript
 define(function(require){
@@ -64,23 +64,34 @@ define(function(require){
 });
 ```
 
-如果显式指定了 moduleName，则不会被识别为模块脚本，也不会进行任何寻址操作:
+如显式指定了 moduleName，而第二参数是函数，那么，也会进行模块加载，如:
 ``` javascript
-define("data", function(require){
-	var user = require("user.js");    // 错误，user将不能获取到任何内容
+define("moduleA", function(require){
+	var user = require("./user.js");   // 根据当前文件所在位置，获取到 user.js
 });
-require("data");    // define("data") 不会被执行
 ```
-正确使用，该如下:
-``` javascript
-function data(){
-	require("user.js", function(user){
-		console.log(user);   // 正确获取
+
+如果 define 写在页面的内联脚本中，其中的 require 寻址路径，与初始[配置]寻址路径保持一致。
+``` html
+<div> http://www.test.com/index.html </div>
+<script src="./lib/project.js"></script>
+<script>
+	define("moduleA", function(require){
+		console.log(require("authorText.js"));
 	});
-};
-define("data", data);
-require("data")();	// require("data") 将返回 function data(){};
+	require("moduleA");
+</script>
 ```
+这里的 require("authorText.js") 对应 http://www.test.com/authorText.js 。
+
+如果，有配置路径:
+``` html
+<script>
+	require.config({ basePath: "script" });
+</script>
+```
+则  require("authorText.js")  对应是 http://www.test.com/script/authorText.js
+
 
 # require
 

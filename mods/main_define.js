@@ -20,7 +20,9 @@ function define(moduleName, func){
 
 function defineWithName(moduleName, func){
     var module = getRequireModule(moduleName);
-    module.state = FINISH;
+    if (!isFunction(func)) {
+        module.state = FINISH;
+    }
     module.exports = func;
 };
 

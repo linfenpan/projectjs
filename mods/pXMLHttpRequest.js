@@ -19,7 +19,7 @@ var ajax;
         });
         search = search.join("&");
         if (search) {
-            search = (url.indexOf("?") > -1 ? "&" : "?") + search;
+            search = (/\?/.test(url) ? "&" : "?") + search;
         }
         return url + search;
     };
@@ -41,7 +41,8 @@ var ajax;
             // 200 = "OK", 302 = "not modify"
             if (xmlHttp.readyState == 4) {
                 xmlHttp.onreadystatechange = null;
-                if (xmlHttp.status == 200 || xmlHttp.status == 302) {
+                var status = xmlHttp.status;
+                if (status == 200 || status == 302) {
                     callback(false, this.responseText, this, url);
                 } else {
                     callback(true);

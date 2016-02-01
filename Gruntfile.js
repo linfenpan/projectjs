@@ -24,19 +24,15 @@ module.exports = function(grunt) {
                 // banner: '/*! By <%= pkg.author %> <%= grunt.template.today("yyyy-mm-dd") %> v<%= pkg.version %> */\n;',
                 preserveComments: 'some',
                 mangle: {
-                    eval: true
+                    toplevel: true,
+                    eval: true,
+                    props: "isAbsolute"
                 },
+
                 compress: {
                     // 删除所有 console
-                    sequences: true,
-                    drop_console: true,
-					conditionals: true,
-					booleans: true,
-					loops: true,
-					join_vars: true,
-                    dead_code: true,
-                    if_return: true,
-                    keep_fargs: false
+                    keep_fargs: false,
+                    unsafe : true
                 }
             },
             build: {

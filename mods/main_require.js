@@ -31,7 +31,7 @@ function getModule(url){
 // 获取 module 的绝对路径
 function getModuleAbsURL(url, dirPath){
     url = template(url, requireTemplateData);
-    if (path.isAbsolute(url)) {
+    if (isAbsolute(url)) {
         return url;
     } else {
         return path.join(dirPath || requireBasePath, url);
@@ -101,9 +101,21 @@ function loadModule(moduleName, callback){
         return callback(module.exports, module);
     }
 
-    var extname = path.ext(moduleName).toLowerCase();
-    var loadFn = moduleLoader[extname] || moduleLoader["_"];
-    loadFn(moduleName, function(loadedData){
+    var extname, loadFn;
+    if (isAbsolute(moduleName)) {
+        extname = path.ext(moduleName).toLowerCase();
+        loadFn = moduleLoader[extname] || moduleLoader["_"];
+    } else {
+        module.url = requireRecentLoadUrl || requireBasePath;
+        extname = "js";
+        loadFn = function(name, callback){
+            defineResult = module.exports;
+            callback();
+        };
+    }
+    // var extname = path.ext(moduleName).toLowerCase();
+    // var loadFn = moduleLoader[extname] || moduleLoader["_"];
+    loadFn(module.url, function(loadedData){
         switch (extname) {
             case "js":
                 if (module.state !== FINISH) {
@@ -124,6 +136,7 @@ function loadModule(moduleName, callback){
 };
 
 function scriptLoadedFinish(url, callback){
+    requireRecentLoadUrl = isAbsolute(url) ? url : requireBasePath;
     var module = getModule(url);
     if (isScriptExecuteDelayMode) {
         defineResult = module.exports;
@@ -200,6 +213,7 @@ var moduleLoader = {
     js: function(url, callback){
         loadScript(url, function(error){
             if (error) {
+                callback();
                 throw "load `"+ url +"` fail!";
             } else {
                 callback();
@@ -209,6 +223,7 @@ var moduleLoader = {
     _: function(url, callback){
         ajax(url, function(error, json){
             if (error) {
+                callback();
                 throw "load `"+ url +"` fail!";
             } else {
                 callback(json);
@@ -233,7 +248,7 @@ function extendRequire(require, dirPath){
 var linkLoadedMap = {};
 function loadLink(href){
     if (!linkLoadedMap[href]) {
-        var link = document.createElement("link");
+        var link = winDocument.createElement("link");
         link.rel = "stylesheet";
         link.href = href;
         eHead.appendChild(link);
