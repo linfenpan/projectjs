@@ -231,7 +231,7 @@ var moduleLoader = {
         });
     },
     add: function(loaderName, func){
-        this[loaderName] = func;
+        moduleLoader[loaderName] = func;
     }
 };
 

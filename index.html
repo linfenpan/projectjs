@@ -123,5 +123,17 @@ function toJSON(json){
         console.assert(!data14, "模块加载: 没有模块出口，不该有内容，不通过");
         console.log("data14应该没有内容:", data14);
     });
+
+
+    // 尝试 loader 的功能
+    require.loader.add("txt", function(url, callback){
+    	require.ajax(url, function(error, text){
+    		callback("加载文件:" + text);
+    	});
+    });
+    require("./data15.txt", function(data15){
+        console.assert(data15.indexOf("加载") === 0, "loader.add 方法不通过");
+        console.log(data15);
+    });
 </script>
 </html>

@@ -15,6 +15,21 @@
 
 注:  require 作为关键字，不可被压缩、更改名字
 
+可能有个疑惑，既然已经有require.js和sea.js，还需要这玩意干嘛呢？
+
+	1. 体积更小
+	2. 更少潜规则
+	3. 更直白的配置
+	4. 更少的关键字，尽可能保证各处使用的一致性
+	5. 以后缀区分文件类型，可自定义后缀载入方式，扩展更丰富的功能
+	6. 同样兼容PC[包括IE]和移动端
+
+缺点也有:
+
+	1. 没有完善脚本的打包规则
+	2. 仅且适用于浏览器，其余的设备，因木有接触，不做更多兼容
+	3. 维护团队么...... [只有一头熊
+
 
 # 简单用例
 
@@ -102,16 +117,30 @@ require 默认都是异步加载的，仅且一种情况下，require可“当�
 ``` javascript
 define(function(require){
 	var user = require("user.js");   // 此行代码，将会同步返回 user.js 的内容
+	// 注意:
+	require("doSomething.js");       // doSomething.js 内容，在运行此行代码前，早已被调用了，此时在此处的，将是 exports 中设置的内容
 });
 ```
-如果 require 超过1个参数，则是异步调用。
+如果 require 最后，跟着callback，模块将会异步加载。
 
 在 require 中，有几个实用的工具方法:
 
 	1. require.css("./data.css"); 根据当前模块路径，加载相关样式，做了简单的防重复加载
 	2. require.url("./data.json"); 根据模块路径，返回文件路径
 
+同时，也可在 require.loader 中，对后缀进行拓展:
 
+``` javascript
+require.loader.add("txt", function(url, callback){
+	require.ajax(url, function(error, text){
+		callback("加载文件:" + text);
+	});
+});
+
+require("./test.txt", function(text){
+	// text === "加载文件:xxxxx";
+});
+```
 
 
 # 寻址路径
