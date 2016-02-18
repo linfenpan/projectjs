@@ -14,39 +14,39 @@ var loadScript, getCurrentScriptUrl;
     };
 
     function createScript(src){
-        var script = winDocument.createElement("script");
+        var script = createElement("script");
         script.async = true;
 
         // 如果支持 onload
         if ("onload" in script) {
             script.onload = function(){
-                onLoad.call(this, false);
+                onLoad.call(script, false);
             };
             script.onerror = function(){
-                onLoad.call(this, true);
+                onLoad.call(script, true);
             }
         } else {
             script.onreadystatechange = function(){
-                if (/loaded|complete/.test(this.readyState)) {
-                    onLoad.call(this);
+                if (/loaded|complete/.test(script.readyState)) {
+                    onLoad.call(script);
                 }
             }
         };
 
         script.src = src;
         eHead.appendChild(script);
-        script = null;
     };
 
     // this 对象，是当前的 script
     function onLoad(error){
-        this.onload = this.onerror = this.onreadystatechange = null;
-        var src = this.getAttribute("src");
+        var script = this;
+        script.onload = script.onerror = script.onreadystatechange = null;
+        var src = script.getAttribute("src");
         each(loadedMap[src], function(callback, index){
             callback(error, src);
         });
 
-        eHead.removeChild(this);
+        eHead.removeChild(script);
         loadedMap[src] = null;
     };
 

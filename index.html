@@ -135,5 +135,13 @@ function toJSON(json){
         console.assert(data15.indexOf("加载") === 0, "loader.add 方法不通过");
         console.log(data15);
     });
+
+    // search 和 hash
+    require("./data16.js?v=123123", function(data16){
+        console.assert(data16 === "data16", "添加了 seach，不通过");
+    });
+    require("./data16.js#123123", function(data16){
+        console.assert(data16 === "data16", "添加了 hash，不通过");
+    });
 </script>
 </html>

@@ -248,7 +248,7 @@ function extendRequire(require, dirPath){
 var linkLoadedMap = {};
 function loadLink(href){
     if (!linkLoadedMap[href]) {
-        var link = winDocument.createElement("link");
+        var link = createElement("link");
         link.rel = "stylesheet";
         link.href = href;
         eHead.appendChild(link);

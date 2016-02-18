@@ -17,6 +17,9 @@ function isFunction(obj){
     return queryType(obj) === "function";
 };
 
+function createElement(elem){
+    return winDocument.createElement(elem);
+}
 
 function each(obj, callback){
     for (var i in obj) {

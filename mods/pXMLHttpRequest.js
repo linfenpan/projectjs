@@ -51,10 +51,10 @@ var ajax;
         };
 
         var method = (params.method || "GET").toUpperCase();
-        var aSync = params.sync === true ? false : true;
+        var aSync = params.sync == true ? false : true;
         var data = params.data || {};
 
-        if (method === "GET") {
+        if (method == "GET") {
             xmlHttp.open(method, concatUrlWithParam(url, data), aSync);
             xmlHttp.send(null);
         } else {
