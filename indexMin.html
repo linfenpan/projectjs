@@ -4,17 +4,7 @@
     <meta charset="utf-8">
     <title>脚本项目</title>
 </head>
-<body>
-    project.full.js 相对于 project.js，增加了3个loader板块:<br/>
-    1. ajax loader，可进行ajax请求<br/>
-    2. json loader，可进行ajax请求，并将内容转为 json [基于 ajax loader 开发]<br/>
-    3. css loader，可进行css加载<br/>
-    <br/>
-    同时，拓展了 window.require 两个方法:<br/>
-    1. require.ajax，可用于 ajax 请求<br/>
-    2. require.css，可用于 css 加载<br/>
-    <div id="test"></div>
-</body>
+<body></body>
 
 <!-- <script src="./mods/global.js" charset="utf-8"></script>
 <script src="./mods/path.js" charset="utf-8"></script>
@@ -24,11 +14,9 @@
 <script src="./mods/main_define.js" charset="utf-8"></script>
 <script src="./mods/main_require.js" charset="utf-8"></script>
 <script src="./mods/main_interface.js" charset="utf-8"></script>
+-->
 
-<script src="./mods/plugin/ajaxLoader.js" charset="utf-8"></script>
-<script src="./mods/plugin/linkLoader.js" charset="utf-8"></script> -->
-
-<script src="./project.full.min.js" charset="utf-8"></script>
+<script src="./project.min.js" charset="utf-8"></script>
 
 <script type="text/javascript">
 
@@ -83,38 +71,6 @@
         canAsync = true;
     });
 
-    require("./data7.json", function(json){
-        console.assert(json, "ajax加载: 不通过");
-        console.log(json);
-    });
-
-    // 尝试 loader 的功能
-    require.loader.add("txt", function(url, callback){
-    	require.ajax(url, function(error, text){
-    		callback("加载文件:" + text);
-    	});
-    });
-
-    require("./data8.test.txt", function(data15){
-        console.assert(data15.indexOf("加载") === 0, "loader.add 方法不通过");
-        console.log(data15);
-    });
-
-    require("data8.js", function(data){
-        console.assert(data, "在 define 中的 !ajax 功能: 不通过");
-        console.log(data);
-    });
-
-    require("data8.js!ajax", function(data){
-        console.assert(typeof data === "string", "脚本作为ajax内容加载: 不通过");
-        console.log(data);
-    });
-
-    console.log("样式路径:" + require.url("data9.css"));
-    require("data9.css", function(){
-        console.assert(document.getElementById("test").clientWidth === 200, "样式加载失败");
-    });
-
     require("data10.js", function(data){
         console.assert(data.url, "require.url: 不通过");
         console.log("data10路径:" + data.url);
@@ -151,8 +107,8 @@
     require("./data16.js#123123", function(data16){
         console.assert(data16 === "data16", "添加了 hash，不通过");
     });
-
-    require.addExtension("sayHi", function(){
+	
+	require.addExtension("sayHi", function(){
         return "hi";
     });
     define("testExtension", function(require, exports, module){

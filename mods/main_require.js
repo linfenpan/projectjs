@@ -104,17 +104,21 @@ function loadModule(moduleName, callback){
     var extname, loadFn;
     if (isAbsolute(moduleName)) {
         extname = path.ext(moduleName).toLowerCase();
-        loadFn = moduleLoader[extname] || moduleLoader["_"];
+        loadFn = moduleLoader[extname] || moduleLoader._;
+        module.url = path.clearExtra(module.url);
     } else {
-        module.url = requireRecentLoadUrl || requireBasePath;
         extname = "js";
         loadFn = function(name, callback){
             defineResult = module.exports;
             callback();
         };
+        module.url = requireRecentLoadUrl || requireBasePath;
     }
-    // var extname = path.ext(moduleName).toLowerCase();
-    // var loadFn = moduleLoader[extname] || moduleLoader["_"];
+
+    if (!loadFn) {
+        throw "loader for suffix `"+ extname +"` is not defined";
+    };
+
     loadFn(module.url, function(loadedData){
         switch (extname) {
             case "js":
@@ -209,6 +213,7 @@ function createDefineRequire(dirPath){
     return innerRequire;
 };
 
+// moduleLoader._ 是默认的模块加载器
 var moduleLoader = {
     js: function(url, callback){
         loadScript(url, function(error){
@@ -220,39 +225,29 @@ var moduleLoader = {
             }
         });
     },
-    _: function(url, callback){
-        ajax(url, function(error, json){
-            if (error) {
-                callback();
-                throw "load `"+ url +"` fail!";
-            } else {
-                callback(json);
-            }
-        });
-    },
     add: function(loaderName, func){
         moduleLoader[loaderName] = func;
+    },
+    setDefault: function(loaderName){
+        moduleLoader._ = moduleLoader[loaderName];
     }
 };
+moduleLoader.setDefault("js");
 
 // require 功能拓展
 function extendRequire(require, dirPath){
     combine(require, {
         loader: moduleLoader,
-        url: function(url){ return getModuleAbsURL(url, dirPath); },
-        css: function(href){ loadLink(this.url(href)); }
-    });
+        addExtension: addExtension,
+        url: function(url){ return getModuleAbsURL(url, dirPath); }
+    }, requireExtension);
 };
 
-// 加载样式
-var linkLoadedMap = {};
-function loadLink(href){
-    if (!linkLoadedMap[href]) {
-        var link = createElement("link");
-        link.rel = "stylesheet";
-        link.href = href;
-        eHead.appendChild(link);
-    }
+// 添加拓展功能
+function addExtension(name, extension){
+    requireExtension[name] = extension;
+    // window.require 是不会再次调用 extendRequire 的
+    require[name] = extension;
 };
 
 extendRequire(require, requireBasePath);

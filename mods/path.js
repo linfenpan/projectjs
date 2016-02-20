@@ -1,4 +1,8 @@
 // 路径解析
+
+// test.json!txt  --> 匹配 !txt
+var SUFFIX_EXTRA_REG = /![^!]+$/;
+// test.json?xx --> test.json
 function removeUrlSeachAndHash(uri){
     return uri.replace(/(\?|#).*$/, "");
 };
@@ -25,6 +29,17 @@ var path = {
     },
     // 后缀名
     ext: function(uri){
-        return removeUrlSeachAndHash(uri).replace(/.*\.(.*)$/, "$1");
+        // test.txt!js  --> "!js"
+        // test.json --> "json"
+        var ext = uri.match(SUFFIX_EXTRA_REG);
+        if (ext) {
+            return ext[0].slice(1);
+        } else {
+            uri = removeUrlSeachAndHash(uri);
+            return uri.match(/\.([^.]*)$/)[1];
+        }
+    },
+    clearExtra: function(uri){
+        return uri.replace(SUFFIX_EXTRA_REG, "");
     }
 };

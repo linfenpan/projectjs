@@ -9,11 +9,12 @@
 
 	1. require 进行模块加载
 	2. define 进行模块定义
-	3. require.ajax 在简单项目中，替代zepto的$.ajax
-	4. require.css 进行样式加载
+	3. require.ajax 在简单项目中，替代zepto的$.ajax [full版]
+	4. require.css 进行样式加载 [full版]
 	5. require.loadScript 进行脚本加载
 
-注:  require 作为关键字，不可被压缩、更改名字
+注1:  require 作为关键字，不可被压缩、更改名字
+注2:  上下文标注 "[full版]"，表示该功能，在 project.full.js 中，才有实现。full版本，实际上添加了两个额外的loader
 
 可能有个疑惑，既然已经有require.js和sea.js，还需要这玩意干嘛呢？
 
@@ -125,13 +126,15 @@ define(function(require){
 
 在 require 中，有几个实用的工具方法:
 
-	1. require.css("./data.css"); 根据当前模块路径，加载相关样式，做了简单的防重复加载
+	1. require.css("./data.css"); 根据当前模块路径，加载相关样式，做了简单的防重复加载 [full版]
 	2. require.url("./data.json"); 根据模块路径，返回文件路径
+	3. require.ajax(url, { method: "GET",  data: {}, sync: true}, callback); 可进行 ajax 请求 [full版]
 
 同时，也可在 require.loader 中，对后缀进行拓展:
 
 ``` javascript
 require.loader.add("txt", function(url, callback){
+	// require.ajax 属于 full版 的功能
 	require.ajax(url, function(error, text){
 		callback("加载文件:" + text);
 	});
@@ -141,6 +144,14 @@ require("./test.txt", function(text){
 	// text === "加载文件:xxxxx";
 });
 ```
+所有loader，可通过"!"注释，表明该文件的正确加载方式，如:
+``` javascript
+require("./test.html!js", $.noop);
+```
+``` test.html ``` 将会以 js 形式，进行加载。
+注：默认的loader，只有 js，在 full 版中，有 js、css、ajax、json 4个loader。
+
+也可以通过 ``` require.loader.setDefault("ajax") ``` 来更改默认的 loader，路径的后缀名，如果不存在于 loader列表，则会使用默认的 loader，进行加载
 
 
 # 寻址路径

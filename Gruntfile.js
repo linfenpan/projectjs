@@ -11,12 +11,20 @@ module.exports = function(grunt) {
                 banner: '/*! By <%= pkg.author %> <%= grunt.template.today("yyyy-mm-dd") %> v<%= pkg.version %> <%= pkg.repository.url %> */\n;(function(window){\n',
                 footer: '\n})(window);'
             },
-            build: {
+            min: {
                 src: [
-                    'mods/global.js', 'mods/path.js', 'mods/scriptLoader.js', 'mods/pXMLHttpRequest.js',
+                    'mods/global.js', 'mods/path.js', 'mods/scriptLoader.js',
                     'mods/main_global.js', 'mods/main_config.js', 'mods/main_define.js', 'mods/main_require.js', 'mods/main_interface.js'
                 ],
                 dest: '<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.js',
+            },
+            full: {
+                src: [
+                    'mods/global.js', 'mods/path.js', 'mods/scriptLoader.js',
+                    'mods/main_global.js', 'mods/main_config.js', 'mods/main_define.js', 'mods/main_require.js', 'mods/main_interface.js',
+                    'mods/plugin/ajaxLoader.js', 'mods/plugin/linkLoader.js'
+                ],
+                dest: '<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.full.js',
             }
         },
         uglify: {
@@ -35,16 +43,24 @@ module.exports = function(grunt) {
                     unsafe : true
                 }
             },
-            build: {
+            min: {
                 src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.js",
                 dest: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.min.js"
+            },
+            full: {
+                src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.full.js",
+                dest: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.full.min.js"
             }
         },
         copy: {
-            dist: {
+            min: {
                 src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.min.js",
                 dest: "./<%= pkg.scriptName %>.min.js"
-           }
+            },
+            full: {
+                src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.full.min.js",
+                dest: "./<%= pkg.scriptName %>.full.min.js"
+            }
         }
     });
 

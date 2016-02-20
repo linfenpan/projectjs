@@ -14,6 +14,8 @@ var requireModuleAlias = {  };
 var requireRecentLoadUrl;
 // 模块状态
 var FINISH = 1, LOADING = 0;
+// require 额外拓展的功能
+var requireExtension = {};
 
 // 当require加载板块时，如果新板块有 define 函数，则会把 define 的结构，记录在这里
 var defineResult;

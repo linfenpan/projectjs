@@ -59,7 +59,7 @@ function trim(str){
     return str.replace(/^\s*|\s*$/g, "");
 };
 
-// 绝对路径?
+// 绝对路径
 function isAbsolute(url){
     return path.isAbsolute(url);
 }

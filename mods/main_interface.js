@@ -1,7 +1,7 @@
 combine(windowRequrie, {
     config: requireConfig,
-    ajax: ajax,
-    loadScript: loadScript
+    loadScript: loadScript,
+    noop: noop
 });
 window.require = windowRequrie;
 window.define = windowDefine;
