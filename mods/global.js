@@ -4,6 +4,8 @@ var eHead = winDocument.head || winDocument.getElementsByTagName("head")[0];
 var internalToString = Object.prototype.toString;
 var internalSlice = [].slice;
 
+var COMMENT_REGEXP = /("([^\\\"]*(\\.)?)*")|('([^\\\']*(\\.)?)*')|(\/{2,}.*?(\r|\n))|(\/\*(\n|.)*?\*\/)/g;
+
 // @NOTICES: 考虑到代码压缩之后，eval里的"o."就没效了..没想到更好的，有大神指导不?
 var template = Function("s", "o", "return s.replace(/{([^}]*)}/g,function(a,k){return eval('o.'+k)})");
 
@@ -62,4 +64,10 @@ function trim(str){
 // 绝对路径
 function isAbsolute(url){
     return path.isAbsolute(url);
-}
+};
+
+function removeComment(str){
+    return str.replace(COMMENT_REGEXP, function(word) {
+        return /^\/{2,}/.test(word) || /^\/\*/.test(word) ? "" : word;
+    });
+};

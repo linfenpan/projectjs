@@ -1,4 +1,7 @@
 module.exports = function(grunt) {
+    var json = require("./package.json");
+    var scriptName = json.scriptName;
+    var scriptFullName = json.scriptName + ".full";
 
     // Project configuration.
     grunt.initConfig({
@@ -16,7 +19,7 @@ module.exports = function(grunt) {
                     'mods/global.js', 'mods/path.js', 'mods/scriptLoader.js',
                     'mods/main_global.js', 'mods/main_config.js', 'mods/main_define.js', 'mods/main_require.js', 'mods/main_interface.js'
                 ],
-                dest: '<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.js',
+                dest: '<%= pkg.dist %><%= pkg.version %>/'+ scriptName +'.js',
             },
             full: {
                 src: [
@@ -24,7 +27,7 @@ module.exports = function(grunt) {
                     'mods/main_global.js', 'mods/main_config.js', 'mods/main_define.js', 'mods/main_require.js', 'mods/main_interface.js',
                     'mods/plugin/ajaxLoader.js', 'mods/plugin/linkLoader.js'
                 ],
-                dest: '<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.full.js',
+                dest: '<%= pkg.dist %><%= pkg.version %>/'+ scriptFullName +'.js',
             }
         },
         uglify: {
@@ -33,8 +36,7 @@ module.exports = function(grunt) {
                 preserveComments: 'some',
                 mangle: {
                     toplevel: true,
-                    eval: true,
-                    props: "isAbsolute"
+                    eval: true
                 },
 
                 compress: {
@@ -44,22 +46,22 @@ module.exports = function(grunt) {
                 }
             },
             min: {
-                src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.js",
-                dest: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.min.js"
+                src: "<%= pkg.dist %><%= pkg.version %>/"+ scriptName +".js",
+                dest: "<%= pkg.dist %><%= pkg.version %>/"+ scriptName +".min.js"
             },
             full: {
-                src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.full.js",
-                dest: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.full.min.js"
+                src: "<%= pkg.dist %><%= pkg.version %>/"+ scriptFullName +".js",
+                dest: "<%= pkg.dist %><%= pkg.version %>/"+ scriptFullName +".min.js"
             }
         },
         copy: {
             min: {
-                src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.min.js",
-                dest: "./<%= pkg.scriptName %>.min.js"
+                src: "<%= pkg.dist %><%= pkg.version %>/"+ scriptName +".min.js",
+                dest: "./"+ scriptName +".min.js"
             },
             full: {
-                src: "<%= pkg.dist %><%= pkg.version %>/<%= pkg.scriptName %>.full.min.js",
-                dest: "./<%= pkg.scriptName %>.full.min.js"
+                src: "<%= pkg.dist %><%= pkg.version %>/"+ scriptFullName +".min.js",
+                dest: "./"+ scriptFullName +".min.js"
             }
         }
     });

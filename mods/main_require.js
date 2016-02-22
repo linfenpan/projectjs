@@ -176,7 +176,7 @@ function anlyseModuleExports(module, callback){
 function anlyseFunctionRely(url, exports, callback){
     var fnContent = exports.toString();
     // 1. 删除注释、换行、空格
-    fnContent = fnContent.replace(COMMENT_REGEXP, "").replace(/\s*/g, "");
+    fnContent = removeComment(fnContent).replace(/\s*/g, "");
     // 2. 分析依赖
     var module;
     var needLoadModules = [];

@@ -1,10 +1,12 @@
-/*! By da宗熊 2016-02-20 v1.1.3 https://github.com/linfenpan/projectM */
+/*! By da宗熊 2016-02-22 v1.1.3 https://github.com/linfenpan/projectM */
 ;(function(window){
 var winDocument = window.document;
 var eHead = winDocument.head || winDocument.getElementsByTagName("head")[0];
 
 var internalToString = Object.prototype.toString;
 var internalSlice = [].slice;
+
+var COMMENT_REGEXP = /("([^\\\"]*(\\.)?)*")|('([^\\\']*(\\.)?)*')|(\/{2,}.*?(\r|\n))|(\/\*(\n|.)*?\*\/)/g;
 
 // @NOTICES: 考虑到代码压缩之后，eval里的"o."就没效了..没想到更好的，有大神指导不?
 var template = Function("s", "o", "return s.replace(/{([^}]*)}/g,function(a,k){return eval('o.'+k)})");
@@ -64,7 +66,13 @@ function trim(str){
 // 绝对路径
 function isAbsolute(url){
     return path.isAbsolute(url);
-}
+};
+
+function removeComment(str){
+    return str.replace(COMMENT_REGEXP, function(word) {
+        return /^\/{2,}/.test(word) || /^\/\*/.test(word) ? "" : word;
+    });
+};
 
 // 路径解析
 
@@ -188,7 +196,6 @@ var loadScript, getCurrentScriptUrl;
 })(window);
 
 // 注释的正则，含多行与单行注释
-var COMMENT_REGEXP = /\/\*(.|\n|\s)*?\*\/|\b\/\/[^\n\r]*/g;
 var REQUIRE_REGEXP = /[^.]require\(["']([^'"]+)["']\)/g;
 
 // require 路径解析时，使用的模板数据
@@ -482,7 +489,7 @@ function anlyseModuleExports(module, callback){
 function anlyseFunctionRely(url, exports, callback){
     var fnContent = exports.toString();
     // 1. 删除注释、换行、空格
-    fnContent = fnContent.replace(COMMENT_REGEXP, "").replace(/\s*/g, "");
+    fnContent = removeComment(fnContent).replace(/\s*/g, "");
     // 2. 分析依赖
     var module;
     var needLoadModules = [];

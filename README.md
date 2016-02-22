@@ -2,19 +2,16 @@
 
 项目地址: [projectM](https://github.com/linfenpan/projectM)
 
-无论require.js还是sea.js，都并不完全满足日常的项目开发，为此，模仿编写了此项目。
+因流行的模块加载器，或用法不够简单、大小超出预期等原因，不能很好的满足日常开发，为此，模仿编写了此项目。
 如要使用或测试，请用最新版
 
 功能介绍:
 
 	1. require 进行模块加载
 	2. define 进行模块定义
-	3. require.ajax 在简单项目中，替代zepto的$.ajax [full版]
-	4. require.css 进行样式加载 [full版]
-	5. require.loadScript 进行脚本加载
+	3. require.loadScript 进行脚本加载
 
 注1:  require 作为关键字，不可被压缩、更改名字
-注2:  上下文标注 "[full版]"，表示该功能，在 project.full.js 中，才有实现。full版本，实际上添加了两个额外的loader
 
 可能有个疑惑，既然已经有require.js和sea.js，还需要这玩意干嘛呢？
 
@@ -64,7 +61,7 @@ define(function(require, exports, module){
 如:
 ``` javascript
 define(function(require, exports, module){
-	/** 其中，如果用不到exports和module，在声明中可去掉 **/
+	/** 其中，如果用不到require、exports、module，在声明中可去掉 **/
 });
 // or
 define("也可以是非function的任意内容");
@@ -117,25 +114,24 @@ define("moduleA", function(require){
 require 默认都是异步加载的，仅且一种情况下，require可“当作”同步加载使用:
 ``` javascript
 define(function(require){
-	var user = require("user.js");   // 此行代码，将会同步返回 user.js 的内容
-	// 注意:
-	require("doSomething.js");       // doSomething.js 内容，在运行此行代码前，早已被调用了，此时在此处的，将是 exports 中设置的内容
+	// 此行代码，将会同步返回 user.js 中，设置的 exports 的内容
+	// 实际上，在运行 define(function(){}) 时，user.js的代码，就已经被运行了
+	var user = require("user.js");
 });
 ```
 如果 require 最后，跟着callback，模块将会异步加载。
 
 在 require 中，有几个实用的工具方法:
 
-	1. require.css("./data.css"); 根据当前模块路径，加载相关样式，做了简单的防重复加载 [full版]
-	2. require.url("./data.json"); 根据模块路径，返回文件路径
-	3. require.ajax(url, { method: "GET",  data: {}, sync: true}, callback); 可进行 ajax 请求 [full版]
+	1. require.url("./data.json"); 根据模块路径，返回文件路径
+	2. require.loadScript(url); 加载脚本
+	3. require.addExtension("拓展名字", "拓展内容"); 给 window.require 和 define 的 require，同时增加方法
 
 同时，也可在 require.loader 中，对后缀进行拓展:
 
 ``` javascript
 require.loader.add("txt", function(url, callback){
-	// require.ajax 属于 full版 的功能
-	require.ajax(url, function(error, text){
+	$.get(url, function(text){
 		callback("加载文件:" + text);
 	});
 });
@@ -156,20 +152,21 @@ require("./test.html!js", $.noop);
 
 # 寻址路径
 
-项目路径，默认是当前访问地址的根目录。可通过设置 id="seedNode"，来指定根据 project.js 所在目录作为基础路径。
+寻址路径，默认是当前访问地址的根目录。可通过设置 id="seedNode"，来指定根据 project.js 所在目录作为基础路径。
 ``` html
 <script src="http://www.test.com/js/project.min.js" id="seedNode"></script>
 ```
-板块的初始加载路径，将会是:  http://www.test.com/js/
+板块的寻址路径，将会是:  http://www.test.com/js/
 
 也可以通过配置，进行配置：
 ``` javascript
 require.config({ basePath: "http://www.test.com/script/" });
 ```
+如果 basePath 是绝对路径，则使用 basePath 作为 寻址路径。
 如果 basePath 是相对路径，则:
 
-	1. 不存在 seedNode ⇒ 页面访问路径 + 相对路径 = 初始加载路径
-	2. 存在 seedNode ⇒ project.js所在的目录 + 相对路径 = 初始加载路径
+	1. 不存在 seedNode ⇒ 页面访问路径 + 相对路径 = 寻址路径
+	2. 存在 seedNode ⇒ project.js所在的目录 + 相对路径 = 寻址路径
 
 
 # 模板
@@ -203,6 +200,22 @@ require("jquery", function($){
 	// $ -> window.jQuery
 });
 ```
+
+
+# FULL版
+
+full版，相对与普通版本，额外增加了 3 个 loader：
+
+	1. ajax loader，可进行ajax请求
+    2. json loader，可进行ajax请求，并将内容转为 json [基于 ajax loader 开发]
+    3. css loader，可进行css加载
+
+同时，拓展了 require 两个方法:
+
+	1. require.ajax，可用于 ajax 请求
+    2. require.css，可用于 css 加载
+
+注: 两个方法，通过 require.addExtension("xxx", func); 的形式，进行注入
 
 
 # 结语

@@ -1,5 +1,4 @@
 // 注释的正则，含多行与单行注释
-var COMMENT_REGEXP = /\/\*(.|\n|\s)*?\*\/|\b\/\/[^\n\r]*/g;
 var REQUIRE_REGEXP = /[^.]require\(["']([^'"]+)["']\)/g;
 
 // require 路径解析时，使用的模板数据
