@@ -112,7 +112,7 @@ function loadModule(moduleName, callback){
             defineResult = module.exports;
             callback();
         };
-        module.url = requireRecentLoadUrl || requireBasePath;
+        // module.url = 
     }
 
     if (!loadFn) {

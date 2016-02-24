@@ -24,6 +24,7 @@ function defineWithName(moduleName, func){
         module.state = FINISH;
     }
     module.exports = func;
+    module.url = requireRecentLoadUrl || requireBasePath;
 };
 
 function defineWithoutName(func){

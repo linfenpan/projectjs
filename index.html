@@ -159,5 +159,14 @@
         console.assert(data17.indexOf("data17") >= 0, "删除注释功能，不通过");
     });
     require("removeComment");
+
+    define("folder1", function(require){
+        require("./data/data18.js");
+        var content = require("folder2");
+        console.assert(content == "data20", "define后，路径混乱了");
+    });
+    define("folder2", function(require, exports, module){
+        module.exports = require("./data20.js");
+    });
 </script>
 </html>
