@@ -1,4 +1,4 @@
-/*! By da宗熊 2016-02-22 v1.1.3 https://github.com/linfenpan/projectM */
+/*! By da宗熊 2016-02-24 v1.1.3 https://github.com/linfenpan/projectM */
 ;(function(window){
 var winDocument = window.document;
 var eHead = winDocument.head || winDocument.getElementsByTagName("head")[0];
