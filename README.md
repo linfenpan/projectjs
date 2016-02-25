@@ -218,6 +218,23 @@ full版，相对与普通版本，额外增加了 3 个 loader：
 注: 两个方法，通过 require.addExtension("xxx", func); 的形式，进行注入
 
 
+# 注意事项
+
+1、不能异步使用 define 函数，如:
+``` javascript
+$(function(){
+	// 因为 dom ready 有一定的时差
+	define("main", function(require){
+		// require 的寻址路径，可能会混乱【不一定会发生
+	});
+});
+```
+
+2、css loader，link标签，是append到 head 元素中。
+	
+	重写css loader加载进来的样式时，需要注意
+
+
 # 结语
 
 持续优化中，如有BUG，联系 [da宗熊]  1071093121@qq.com
