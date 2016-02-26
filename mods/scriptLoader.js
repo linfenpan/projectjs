@@ -16,6 +16,7 @@ var loadScript, getCurrentScriptUrl;
     function createScript(src){
         var script = createElement("script");
         script.async = true;
+        script.type= 'text/javascript';
 
         // 如果支持 onload
         if ("onload" in script) {
@@ -24,7 +25,7 @@ var loadScript, getCurrentScriptUrl;
             };
             script.onerror = function(){
                 onLoad.call(script, true);
-            }
+            };
         } else {
             script.onreadystatechange = function(){
                 if (/loaded|complete/.test(script.readyState)) {
@@ -42,6 +43,7 @@ var loadScript, getCurrentScriptUrl;
         var script = this;
         script.onload = script.onerror = script.onreadystatechange = null;
         var src = script.getAttribute("src");
+
         each(loadedMap[src], function(callback, index){
             callback(error, src);
         });

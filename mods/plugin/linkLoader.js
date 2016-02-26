@@ -6,6 +6,7 @@ var eHead = document.head || document.getElementsByTagName("head")[0];
 function loadLink(href, callback){
     callback = callback || windowRequire.noop;
     if (!linkLoadedMap[href]) {
+        linkLoadedMap[href] = 1;
         var link = createElement("link");
         link.rel = "stylesheet";
         link.href = href;

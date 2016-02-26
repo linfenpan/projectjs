@@ -27,6 +27,11 @@ var path = {
     dir: function(uri){
         return removeUrlSeachAndHash(uri).replace(/(.*\/).*$/, "$1");
     },
+    root: function(uri){
+        // http://www.baidu.com/xxx/index.html --> http://www.baidu.com/
+        var res = uri.match(/.*:\/{2,}.*?(\/|$)/g);
+        return res ? res[0] : "";
+    },
     // 后缀名
     ext: function(uri){
         // test.txt!js  --> "!js"

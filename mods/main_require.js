@@ -34,7 +34,11 @@ function getModuleAbsURL(url, dirPath){
     if (isAbsolute(url)) {
         return url;
     } else {
-        return path.join(dirPath || requireBasePath, url);
+        dirPath = dirPath || requireBasePath;
+        if (/^\//.test(url)) {
+            dirPath = path.root(dirPath);
+        }
+        return path.join(dirPath, url);
     }
 };
 
@@ -61,7 +65,10 @@ function require(){
         callback = noop;
     }
 
-    loadAllModules(requireBasePath, modules, callback);
+    // 应对完全乱用的同学
+    setTimeout(function(){
+        loadAllModules(requireBasePath, modules, callback);
+    });
 };
 
 function loadAllModules(dirPath, modules, callback){
@@ -112,7 +119,7 @@ function loadModule(moduleName, callback){
             defineResult = module.exports;
             callback();
         };
-        // module.url = 
+        // module.url =
     }
 
     if (!loadFn) {
@@ -144,9 +151,10 @@ function scriptLoadedFinish(url, callback){
     var module = getModule(url);
     if (isScriptExecuteDelayMode) {
         defineResult = module.exports;
-    } else {
-        module.exports = defineResult;
     }
+    // 重复加载 两次脚本，在第1次脚本分析完成之前，status == LOADING..，但是内容却已经加载完成了
+    module.exports = defineResult || module.exports;
+
     anlyseModuleExports(module, function(exports){
         callback(exports);
     });

@@ -28,12 +28,25 @@
 <script src="./mods/plugin/ajaxLoader.js" charset="utf-8"></script>
 <script src="./mods/plugin/linkLoader.js" charset="utf-8"></script> -->
 
+<script type="text/javascript" src="./jquery.js"></script>
+<!-- <script type="text/javascript" src="./require.js"> -->
+</script>
 <script src="./project.full.min.js" charset="utf-8"></script>
 
 <script type="text/javascript">
-
+    window.onerror = function(e){
+        alert(e);
+    }
     // 允许分开配置
     require.config({ basePath: "test" });
+
+
+    define("main", function(require){
+        var POP = require("./POP/POP.js");
+        POP.autoTip(123123);
+    });
+    require("main");
+
     require.config({
         template: {
             data4: "data4.js"
@@ -99,9 +112,12 @@
         console.assert(typeof data === "string", "脚本作为ajax内容加载: 不通过");
     });
 
-    console.log("样式路径:" + require.url("data9.css"));
+    console.log("样式路径1:" + require.url("data9.css"));
+    console.log("样式路径2:" + require.url("/data9.css"));
     require("data9.css", function(){
-        console.assert(document.getElementById("test").clientWidth === 200, "样式加载失败");
+        setTimeout(function(){
+            console.assert(document.getElementById("test").clientWidth === 200, "样式加载失败");
+        }, 100);
     });
 
     require("data10.js", function(data){
