@@ -33,7 +33,6 @@ var loadScript, getCurrentScriptUrl;
                 }
             }
         };
-
         script.src = src;
         eHead.appendChild(script);
     };

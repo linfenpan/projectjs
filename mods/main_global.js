@@ -9,8 +9,6 @@ var requireBasePath;
 var requireLoadedModule = {  };
 // require 中，设置的module依赖别名
 var requireModuleAlias = {  };
-// require 中，最近加载的链接
-var requireRecentLoadUrl;
 // 模块状态
 var FINISH = 1, LOADING = 0;
 // require 额外拓展的功能

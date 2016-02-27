@@ -1,5 +1,6 @@
 var windowRequrie;
 var getRequireModule;
+var getAbsoluteURL;
 
 ;(function(window){
 
@@ -9,15 +10,15 @@ function initModule(url){
         var module;
         if (requireModuleAlias[url]) {
             module = {
-                url: url,
+                url: EMPTY,
                 state: FINISH,
                 exports: requireModuleAlias[url]
             };
         } else {
             module = {
-                url: url,
+                url: EMPTY,
                 state: LOADING,
-                exports: null
+                exports: EMPTY
             };
         }
         requireLoadedModule[url] = module;
@@ -65,18 +66,14 @@ function require(){
         callback = noop;
     }
 
-    // 应对完全乱用的同学
-    setTimeout(function(){
-        loadAllModules(requireBasePath, modules, callback);
-    });
+    loadAllModules(requireBasePath, modules, callback);
 };
 
 function loadAllModules(dirPath, modules, callback){
     var args = [];
     var modulesCount = modules.length;
     each(modules, function(module, index){
-        var moduleName = queryRealModuleName(module, dirPath);
-        loadModule(moduleName, function(exports, module){
+        loadModule(dirPath, module, function(exports, module){
             args[index] = exports;
             modulesCount--;
             checkLoadFinish();
@@ -91,15 +88,19 @@ function loadAllModules(dirPath, modules, callback){
     checkLoadFinish();
 };
 
-function loadModule(moduleName, callback){
+function loadModule(dirPath, moduleName, callback){
     var module;
+    // 获取真实板块名
+    moduleName = queryRealModuleName(moduleName, dirPath);
+
     // 别名模块，立刻返回
     if (requireModuleAlias[moduleName]) {
         module = initModule(moduleName);
         return callback(module.exports, module);
     }
 
-    moduleName = queryRealModuleName(moduleName);
+    // @notice 只在 loadAllModules 中传入，这里不作是否存在的检测
+    // moduleName = queryRealModuleName(moduleName);
     module = initModule(moduleName);
 
     // 加载完成的模块，立刻返回
@@ -108,18 +109,31 @@ function loadModule(moduleName, callback){
         return callback(module.exports, module);
     }
 
+    // 如果不是绝对路径，使用父级路径
+    // @BUG 在 data.js 中，define("a", fn)，模块a的寻址路径，取决于第1次require("a")出现的文件，这是 require() 驱动再运行的坑处
+    // 可以设置 define("a", fn, "//") 让它针对于 basePath 进行寻址
+    if (isAbsolute(moduleName)) {
+        module.url = moduleName;
+    } else {
+        var url = module.url;
+        if (!url) {
+            module.url = dirPath;
+        } else if (!isAbsolute(url)) {
+            module.url = getModuleAbsURL(url, dirPath);
+        }
+    }
+
     var extname, loadFn;
     if (isAbsolute(moduleName)) {
         extname = path.ext(moduleName).toLowerCase();
         loadFn = moduleLoader[extname] || moduleLoader._;
-        module.url = path.clearExtra(module.url);
+        module.url = path.clearExtra(moduleName);
     } else {
         extname = "js";
         loadFn = function(name, callback){
             defineResult = module.exports;
             callback();
         };
-        // module.url =
     }
 
     if (!loadFn) {
@@ -147,18 +161,18 @@ function loadModule(moduleName, callback){
 };
 
 function scriptLoadedFinish(url, callback){
-    requireRecentLoadUrl = isAbsolute(url) ? url : requireBasePath;
     var module = getModule(url);
     if (isScriptExecuteDelayMode) {
         defineResult = module.exports;
     }
+
     // 重复加载 两次脚本，在第1次脚本分析完成之前，status == LOADING..，但是内容却已经加载完成了
     module.exports = defineResult || module.exports;
+    defineResult = null;
 
     anlyseModuleExports(module, function(exports){
         callback(exports);
     });
-    defineResult = null;
 };
 
 // module.exports & module.state == LOADING，exports 对应不同的格式，会输出不同的值
@@ -197,7 +211,7 @@ function anlyseFunctionRely(url, exports, callback){
     // 4. 执行 exports 得到最后的 结果
     var moduleDirPath = path.dir(url);
     loadAllModules(moduleDirPath, needLoadModules, function(){
-        var module = {exports: {}, url: url};
+        var module = {exports: {}, url: moduleDirPath};
         exports(createDefineRequire(moduleDirPath), module.exports, module);
         callback(module.exports);
     });
@@ -261,6 +275,7 @@ function addExtension(name, extension){
 extendRequire(require, requireBasePath);
 
 getRequireModule = getModule;
+getAbsoluteURL = getModuleAbsURL;
 windowRequrie = require;
 
 })(window);

@@ -1,6 +1,7 @@
 var winDocument = window.document;
 var eHead = winDocument.head || winDocument.getElementsByTagName("head")[0] || winDocument.documentElement;
 
+var EMPTY = null;
 var internalToString = Object.prototype.toString;
 var internalSlice = [].slice;
 

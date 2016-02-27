@@ -1,8 +1,9 @@
-/*! By da宗熊 2016-02-26 v1.1.4 https://github.com/linfenpan/projectM */
+/*! By da宗熊 2016-02-27 v1.1.4 https://github.com/linfenpan/projectM */
 ;(function(window){
 var winDocument = window.document;
 var eHead = winDocument.head || winDocument.getElementsByTagName("head")[0] || winDocument.documentElement;
 
+var EMPTY = null;
 var internalToString = Object.prototype.toString;
 var internalSlice = [].slice;
 
@@ -160,7 +161,6 @@ var loadScript, getCurrentScriptUrl;
                 }
             }
         };
-
         script.src = src;
         eHead.appendChild(script);
     };
@@ -213,8 +213,6 @@ var requireBasePath;
 var requireLoadedModule = {  };
 // require 中，设置的module依赖别名
 var requireModuleAlias = {  };
-// require 中，最近加载的链接
-var requireRecentLoadUrl;
 // 模块状态
 var FINISH = 1, LOADING = 0;
 // require 额外拓展的功能
@@ -281,28 +279,45 @@ var windowDefine;
 //  define("moduleB", function(require, exports, module){ exports.data = 123; }); --> {url: "moduleB", exports: {data: 123}, state: FINISH}
 //  define("test2"); --> {url: "此函数的链接", exports: "test2", state: FINISH};
 //  define(function(require, exports, module){ exports.data = 123; }); --> {url: "此函数的链接", exports: {data: 123}, state: FINISH};
-//  define(function(){ /*! 具体的html内容 */ }); --> {url: "此函数的链接", exports: "具体的html内容", state: FINISH};
-function define(moduleName, func){
-    if (arguments.length <= 1) {
-        func = moduleName;
-        moduleName = null;
-        defineWithoutName(func);
-    } else {
-        defineWithName(moduleName, func);
-    }
+//  define(function(){},url);  --> {url: url, exports: }
+function define(moduleName, fn, requireUrl){
+    var argsLength = arguments.length;
+    switch (argsLength) {
+        case 1:
+            fn = moduleName;
+            defineWithoutName(fn);
+            break;
+        case 2:
+            defineWithName(moduleName, fn);
+            break;
+        default:
+            if (!isFunction(fn)) {
+                requireUrl = EMPTY;
+            }
+            defineWithName(moduleName, fn, requireUrl);
+            break;
+    };
 };
 
-function defineWithName(moduleName, func){
+function defineWithName(moduleName, fn, requireUrl){
     var module = getRequireModule(moduleName);
-    if (!isFunction(func)) {
+    if (!isFunction(fn)) {
         module.state = FINISH;
     }
-    module.exports = func;
-    module.url = requireRecentLoadUrl || requireBasePath;
+    module.exports = fn;
+
+    requireUrl = requireUrl || "";
+    var basePathReg = /^\/\//;
+    if (requireUrl) {
+        if (basePathReg.test(requireUrl)) {
+            requireUrl = requireUrl.replace(basePathReg, requireBasePath);
+        }
+        module.url = path.join(requireUrl, "/");
+    }
 };
 
 function defineWithoutName(func){
-    defineResult = null;
+    defineResult = EMPTY;
     if (isScriptExecuteDelayMode) {
         // 脚本延迟执行模式下，script 执行完之后，不会立刻执行 onload 事件，而是会有一定延后，或者等待其它脚本执行完毕，才会触发自己的 onload 事件
         //  估计，是 async 不生效的缘故吧
@@ -321,6 +336,7 @@ windowDefine = define;
 
 var windowRequrie;
 var getRequireModule;
+var getAbsoluteURL;
 
 ;(function(window){
 
@@ -330,15 +346,15 @@ function initModule(url){
         var module;
         if (requireModuleAlias[url]) {
             module = {
-                url: url,
+                url: EMPTY,
                 state: FINISH,
                 exports: requireModuleAlias[url]
             };
         } else {
             module = {
-                url: url,
+                url: EMPTY,
                 state: LOADING,
-                exports: null
+                exports: EMPTY
             };
         }
         requireLoadedModule[url] = module;
@@ -386,18 +402,14 @@ function require(){
         callback = noop;
     }
 
-    // 应对完全乱用的同学
-    setTimeout(function(){
-        loadAllModules(requireBasePath, modules, callback);
-    });
+    loadAllModules(requireBasePath, modules, callback);
 };
 
 function loadAllModules(dirPath, modules, callback){
     var args = [];
     var modulesCount = modules.length;
     each(modules, function(module, index){
-        var moduleName = queryRealModuleName(module, dirPath);
-        loadModule(moduleName, function(exports, module){
+        loadModule(dirPath, module, function(exports, module){
             args[index] = exports;
             modulesCount--;
             checkLoadFinish();
@@ -412,15 +424,19 @@ function loadAllModules(dirPath, modules, callback){
     checkLoadFinish();
 };
 
-function loadModule(moduleName, callback){
+function loadModule(dirPath, moduleName, callback){
     var module;
+    // 获取真实板块名
+    moduleName = queryRealModuleName(moduleName, dirPath);
+
     // 别名模块，立刻返回
     if (requireModuleAlias[moduleName]) {
         module = initModule(moduleName);
         return callback(module.exports, module);
     }
 
-    moduleName = queryRealModuleName(moduleName);
+    // @notice 只在 loadAllModules 中传入，这里不作是否存在的检测
+    // moduleName = queryRealModuleName(moduleName);
     module = initModule(moduleName);
 
     // 加载完成的模块，立刻返回
@@ -429,18 +445,31 @@ function loadModule(moduleName, callback){
         return callback(module.exports, module);
     }
 
+    // 如果不是绝对路径，使用父级路径
+    // @BUG 在 data.js 中，define("a", fn)，模块a的寻址路径，取决于第1次require("a")出现的文件，这是 require() 驱动再运行的坑处
+    // 可以设置 define("a", fn, "//") 让它针对于 basePath 进行寻址
+    if (isAbsolute(moduleName)) {
+        module.url = moduleName;
+    } else {
+        var url = module.url;
+        if (!url) {
+            module.url = dirPath;
+        } else if (!isAbsolute(url)) {
+            module.url = getModuleAbsURL(url, dirPath);
+        }
+    }
+
     var extname, loadFn;
     if (isAbsolute(moduleName)) {
         extname = path.ext(moduleName).toLowerCase();
         loadFn = moduleLoader[extname] || moduleLoader._;
-        module.url = path.clearExtra(module.url);
+        module.url = path.clearExtra(moduleName);
     } else {
         extname = "js";
         loadFn = function(name, callback){
             defineResult = module.exports;
             callback();
         };
-        // module.url =
     }
 
     if (!loadFn) {
@@ -468,18 +497,18 @@ function loadModule(moduleName, callback){
 };
 
 function scriptLoadedFinish(url, callback){
-    requireRecentLoadUrl = isAbsolute(url) ? url : requireBasePath;
     var module = getModule(url);
     if (isScriptExecuteDelayMode) {
         defineResult = module.exports;
     }
+
     // 重复加载 两次脚本，在第1次脚本分析完成之前，status == LOADING..，但是内容却已经加载完成了
     module.exports = defineResult || module.exports;
+    defineResult = null;
 
     anlyseModuleExports(module, function(exports){
         callback(exports);
     });
-    defineResult = null;
 };
 
 // module.exports & module.state == LOADING，exports 对应不同的格式，会输出不同的值
@@ -518,7 +547,7 @@ function anlyseFunctionRely(url, exports, callback){
     // 4. 执行 exports 得到最后的 结果
     var moduleDirPath = path.dir(url);
     loadAllModules(moduleDirPath, needLoadModules, function(){
-        var module = {exports: {}, url: url};
+        var module = {exports: {}, url: moduleDirPath};
         exports(createDefineRequire(moduleDirPath), module.exports, module);
         callback(module.exports);
     });
@@ -582,6 +611,7 @@ function addExtension(name, extension){
 extendRequire(require, requireBasePath);
 
 getRequireModule = getModule;
+getAbsoluteURL = getModuleAbsURL;
 windowRequrie = require;
 
 })(window);
@@ -691,19 +721,34 @@ windowRequire.loader.add(loaderName, createAjaxCallback(loaderName, toJSON));
 ;(function(windowRequire){
 
 // 加载样式
-var linkLoadedMap = {};
+var loadingMap = {  };
+var loadedMap = {  };
 var eHead = document.head || document.getElementsByTagName("head")[0];
 function loadLink(href, callback){
     callback = callback || windowRequire.noop;
-    if (!linkLoadedMap[href]) {
-        linkLoadedMap[href] = 1;
-        var link = createElement("link");
-        link.rel = "stylesheet";
-        link.href = href;
-        link.onload = callback;
-        eHead.appendChild(link);
-    } else {
+    // 1. 已加载成功，立刻回调
+    // 2. 正在加载，压入栈
+    // 3. 没加载，创建栈
+    if (loadedMap[href]) {
         callback();
+    } else {
+        var stack = loadingMap[href];
+        var link;
+        if (!stack) {
+            stack = loadingMap[href] = [];
+            link = createElement("link");
+            link.rel = "stylesheet";
+            link.href = href;
+            link.onload = function(){
+                var callbacks = stack;
+                for (var i = 0, max = callbacks.length; i < max; i++) {
+                    callbacks[i]();
+                }
+                loadingMap[href] = null;
+            };
+        }
+        stack.push(callback);
+        link && eHead.appendChild(link);
     }
 };
 
