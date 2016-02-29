@@ -4,7 +4,6 @@
 
 测试地址: [demo](http://linfenpan.github.io/demo/project/)
 
-测试请使用最新版本~
 
 因流行的模块加载器，或用法不够简单、大小超出预期等原因，不能很好的满足日常开发，为此，模仿编写了此项目。
 如要使用或测试，请用最新版
@@ -13,7 +12,6 @@
 
 	1. require 进行模块加载
 	2. define 进行模块定义
-	3. require.loadScript 进行脚本加载
 
 注1:  require 作为关键字，不可被压缩、更改名字
 
@@ -26,11 +24,41 @@
 	5. 以后缀区分文件类型，可自定义后缀载入方式，扩展更丰富的功能
 	6. 同样兼容PC[包括IE]和移动端
 
+举个最直观的例子：
+
+有如下文件:
+``` javascript
+// ./user/user.js
+define("user", function(require, exports, module){
+	exports.data = require("./data.js");
+});
+```
+如果使用 sea.js 引入:
+``` javasript
+seajs.use("./user/user", function(){
+    seajs.use("user", function(user){
+	    // 其中的 require("./data.js") 将会寻找 ./data.js
+        console.log(user);
+    });
+});
+```
+如果使用 project.js 引入:
+``` javascript
+require("./user/user.js", function(){
+	require("user", function(user){
+		// 其中的 require("./data.js") 将会寻找 ./user/data.js
+		console.log(user);
+    });
+});
+```
+好处是显而易见的，define的时候，再也不会被路径，搞得一头雾水了。
+
+
 缺点也有:
 
 	1. 没有完善脚本的打包规则
 	2. 仅且适用于浏览器，其余的设备，因木有接触，不做更多兼容
-	3. 团队各种奇怪的玩法，表示节操君已经掉了一地
+	3. 因团队各种奇怪的玩法，表示节操君已经掉了一地
 	4. 维护团队么...... [只有一头熊
 
 
@@ -121,13 +149,22 @@ define("moduleA", function(require){
 ```
 注意: 第3个参数，如果是 "//"，则代表当前项目的初始寻址路径。
 
+如项目的寻址路径为: http://www.test.com/script/，那么:
+``` javascript
+define("moduleA", function(require){
+	// http://www.test.com/data/data.js
+	require("./data.js");
+}, "//../data");
+```
+
 
 # require
 
 用于加载一个或多个模块。用法如下: require(module1, [module2, module3, ...], callback?);
 其中，callback 可以省略。
+对于没加载过的板块，require是异步加载；已载入模块，则是同步返回内容。
 
-require 默认都是异步加载的，仅且一种情况下，require可“当作”同步加载使用:
+而在模块中，require("moduleA") 这种形式的代码，可“当作” 100% 的同步加载。
 ``` javascript
 define(function(require){
 	// 此行代码，将会同步返回 user.js 中，设置的 exports 的内容
@@ -135,7 +172,7 @@ define(function(require){
 	var user = require("user.js");
 });
 ```
-如果 require 最后，跟着callback，模块将会异步加载。
+如果 require 最后，跟着callback，而且模块没有加载过，那么模块将会异步加载，完成后，调用 callback
 
 见如下代码:
 ``` javascript

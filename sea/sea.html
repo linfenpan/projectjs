@@ -7,11 +7,20 @@
 <body>
 
 </body>
-<script src="sea.js" charset="utf-8"></script>
+<!-- <script src="sea.js" charset="utf-8"></script> -->
+<script src="../project.full.min.js" charset="utf-8"></script>
 
 <script type="text/javascript">
-    seajs.use(["./test/data.js"], function(){
-        seajs.use("data");
+    // seajs.use("./user/user", function(){
+    //     seajs.use("user", function(user){
+    //         console.log(user);
+    //     });
+    // });
+
+    require("./user/user.js", function(){
+        require("user", function(user){
+            console.log(user);
+        });
     });
 </script>
 </html>
