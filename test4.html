@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>其它测试</title>
+</head>
+<body>
+    1. 去注释<br/>
+    2. 带hash或seach的require寻址<br/>
+    3. define("moduleName", fn, url)<br/>
+    4. require.addExtension(extensionName, fn)<br/>
+    5. require.loader.add(loaderName, fn)<br/>
+<script type="text/javascript">
+    var define = parent.define;
+    var require = parent.require;
+    var $ = parent.$;
+
+
+    define("frame4RemoveComment", function(require){
+        // @notice 如果控制台出现 frame4.testxx.js 找不到，就不通过了
+        // require("./frame4.testxx.js");
+        /*
+            require("./frame4.testxx.js");
+        */
+        // require("./frame4.testxx.js");
+        "http://www.baidu.com/" // require("./frame4.testxx.js");
+        // 会被误删？
+        "http://www.baidu.com/"; var frame4 = require("./test/frame4.test1.js");
+
+        console.assert(frame4.data == "frame4", "删除注释功能，不通过");
+    });
+    require("frame4RemoveComment");
+
+
+    require("./test/frame4.test1.js#hashTest", function(frame4){
+        console.assert(frame4.data == "frame4", "带hash的链接，不通过");
+    });
+    require("./test/frame4.test1.js?searchTest", function(frame4){
+        console.assert(frame4.data == "frame4", "带search的链接，不通过");
+    });
+
+
+    define("frame4WithParam3", function(require){
+        var frame4 = require("./frame4.test2.js");
+        console.assert(frame4.data == "frame4", "define的url参数，不通过");
+    }, "./test/");
+    require("frame4WithParam3");
+
+
+    require.addExtension("frame4SayHi", function(){
+        return "frame4";
+    });
+    console.assert(require.frame4SayHi() == "frame4", "require.addExtension不通过");
+    define("frame4AddExtension", function(require){
+        console.assert(require.frame4SayHi() == "frame4", "require.addExtension不通过");
+    });
+    require("frame4AddExtension");
+
+
+    require.loader.add("txt", function(url, callback){
+        $.get(url, function(txt){
+            callback($.trim(txt));
+        });
+    });
+    require("./test/frame4.test3.txt", function(frame4){
+        console.assert(frame4 == "frame4", "自定义loader不通过");
+    });
+    require("./test/frame4.test3.html!txt", function(frame4){
+        console.assert(frame4 == "frame4", "自定义loader不通过");
+    });
+</script>
+</body>
+</html>

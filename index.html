@@ -3,6 +3,26 @@
 <head>
     <meta charset="utf-8">
     <title>脚本项目</title>
+    <style media="screen">
+        * { padding: 0; margin: 0; }
+        iframe { width: 540px; height: 120px; margin-top: 20px; border: 1px solid #ddd; box-sizing: border-box; }
+    </style>
+    <script type="text/javascript" src="./jquery.js"></script>
+
+    <!-- 基本模块 -->
+    <!-- <script src="./mods/global.js" charset="utf-8"></script>
+    <script src="./mods/path.js" charset="utf-8"></script>
+    <script src="./mods/scriptLoader.js" charset="utf-8"></script>
+    <script src="./mods/main_global.js" charset="utf-8"></script>
+    <script src="./mods/main_config.js" charset="utf-8"></script>
+    <script src="./mods/main_define.js" charset="utf-8"></script>
+    <script src="./mods/main_require.js" charset="utf-8"></script>
+    <script src="./mods/main_interface.js" charset="utf-8"></script> -->
+    <!-- 额外模块 -->
+    <!-- <script src="./mods/plugin/ajaxLoader.js" charset="utf-8"></script>
+    <script src="./mods/plugin/linkLoader.js" charset="utf-8"></script> -->
+
+    <script type="text/javascript" src="./project.full.min.js"></script>
 </head>
 <body>
     project.full.js 相对于 project.js，增加了3个loader板块:<br/>
@@ -13,184 +33,13 @@
     同时，拓展了 window.require 两个方法:<br/>
     1. require.ajax，可用于 ajax 请求<br/>
     2. require.css，可用于 css 加载<br/>
-    <div id="test"></div>
+
+    <iframe src="./test1.html"></iframe>
+    <iframe src="./test2.html"></iframe>
+    <iframe src="./test3.html"></iframe>
+    <iframe src="./test4.html"></iframe>
+
+    <iframe src="./test5.html"></iframe>
+    <div id="test"><!-- 样式加载测试 --></div>
 </body>
-<script type="text/javascript" src="./jquery.js"></script>
-
-
-<!-- <script src="./mods/global.js" charset="utf-8"></script>
-<script src="./mods/path.js" charset="utf-8"></script>
-<script src="./mods/scriptLoader.js" charset="utf-8"></script>
-<script src="./mods/main_global.js" charset="utf-8"></script>
-<script src="./mods/main_config.js" charset="utf-8"></script>
-<script src="./mods/main_define.js" charset="utf-8"></script>
-<script src="./mods/main_require.js" charset="utf-8"></script>
-<script src="./mods/main_interface.js" charset="utf-8"></script>
-
-<script src="./mods/plugin/ajaxLoader.js" charset="utf-8"></script>
-<script src="./mods/plugin/linkLoader.js" charset="utf-8"></script> -->
-
-<script src="./project.full.min.js" charset="utf-8"></script>
-
-<script src="http://www.100bt.com/resource/js/lib/jquery-min.js" charset="utf-8"></script>
-
-<script type="text/javascript">
-    window.onerror = function(e){
-        alert(e);
-    }
-    // 允许分开配置
-    require.config({ basePath: "test" });
-
-    require.config({
-        template: {
-            data4: "data4.js"
-        },
-        alias: {
-            author: "da宗熊"
-        }
-    });
-
-    define("main", function(require){
-        var POP = require("./POP/POP.js");
-        POP.autoTip("应该看到它才对!");
-    });
-    require("main");
-
-    // 路径会混乱否?
-    define("main2", function(require){
-        var POP = require("./POP/POP.js");
-        console.assert(POP.autoTip, "引入路径混乱了");
-    }, "//../test/");
-    require("main2");
-
-    require("./data1.js", function(data){
-        console.assert(data, "require(\"moduleA\", function(){}); 失败");
-    });
-    require("./data2.js", function(data){
-        console.assert(data, "require(\"具体内容\", function(){}); 失败");
-    });
-
-    define("inner", "内联脚本中，define(module, text) 功能");
-    require("inner", function(inner){
-        console.assert(inner, "内联脚本，模块定义: define(module, text)，不通过")
-    });
-    require("./data3.js", function(data){
-        console.assert(data, "模块定义: define(content)，不通过");
-    });
-
-    require("./{data4}", function(data){
-        console.assert(data, "require.config({ template: {} });，不通过");
-        console.assert(data.author, "require.config({ alias: {} });，不通过");
-    });
-    require("./data5.js", function(data){
-        console.assert(data.inner, "模块加载: 多个define, 不通过");
-        console.assert(data.outer, "模块加载: 加载外部脚本, 不通过");
-    });
-
-    require("./data6.js", function(data){
-        var canAsync = false;
-        data.async(function(pass){
-            console.assert(pass, "异步加载: require(url, callback), 不通过");
-            console.assert(canAsync, "异步加载: require(url, callback), 没有异步执行");
-        });
-        canAsync = true;
-    });
-
-    require("./data7.json", function(json){
-        console.assert(json, "ajax加载: 不通过");
-    });
-
-    // 尝试 loader 的功能
-    require.loader.add("txt", function(url, callback){
-    	require.ajax(url, function(error, text){
-    		callback("加载文件:" + text);
-    	});
-    });
-
-    require("./data8.test.txt", function(data15){
-        console.assert(data15.indexOf("加载") === 0, "loader.add 方法不通过");
-    });
-
-    require("data8.js", function(data){
-        console.assert(data, "在 define 中的 !ajax 功能: 不通过");
-    });
-
-    require("data8.js!ajax", function(data){
-        console.assert(typeof data === "string", "脚本作为ajax内容加载: 不通过");
-    });
-
-    console.log("样式路径1:" + require.url("data9.css"));
-    console.log("样式路径2:" + require.url("/data9.css"));
-    require("data9.css", function(){
-        setTimeout(function(){
-            console.assert(document.getElementById("test").clientWidth === 200, "样式加载失败");
-        }, 100);
-    });
-
-    require("data10.js", function(data){
-        console.assert(data.url, "require.url: 不通过");
-        console.log("data10路径:" + data.url);
-    });
-
-    define("innerRequire", function(require, exports, module){
-        var data11 = require("./data11.js");
-        module.exports = data11;
-    });
-    require("innerRequire", function(pass){
-        console.assert(pass, "内联脚本: require功能, 不通过");
-    });
-
-    require("./data12.js", function(data12){
-        console.assert(data12, "模块加载: 多次 define(methodA, fnc)，不通过");
-    });
-
-    require("./data13.js", function(data13){
-        console.assert(!data13, "模块加载: 没有define不该有内容，不通过");
-    });
-
-    require("./data14.js", function(data14){
-        console.assert(!data14, "模块加载: 没有模块出口，不该有内容，不通过");
-    });
-
-    // search 和 hash
-    require("./data16.js?v=123123", function(data16){
-        console.assert(data16 === "data16", "添加了 seach，不通过");
-    });
-    require("./data16.js#123123", function(data16){
-        console.assert(data16 === "data16", "添加了 hash，不通过");
-    });
-
-    require.addExtension("sayHi", function(){
-        return "hi";
-    });
-    define("testExtension", function(require, exports, module){
-        module.exports = require.sayHi();
-    });
-    require("testExtension", function(hi){
-        console.assert(hi === "hi", "require.addExtension，不通过");
-    });
-    console.assert(require.sayHi() === "hi", "require.addExtension，不通过");
-
-    define("removeComment", function(require){
-        // require("./data17.js");
-        /*
-            require("./data17.js");
-        */
-        // require("./data17.js");
-        "http://www.baidu.com/"//require("./data17.js");
-        "http://www.baidu.com/";var data17 = require("./data17.data.js");
-        console.assert(data17.indexOf("data17") >= 0, "删除注释功能，不通过");
-    });
-    require("removeComment");
-
-    define("folder1", function(require){
-        require("./data/data18.js");
-        var content = require("folder2");
-        console.assert(content == "data20", "define后，路径混乱了");
-    });
-    define("folder2", function(require, exports, module){
-        module.exports = require("./data20.js");
-    });
-    require("folder1", "folder2");
-</script>
 </html>

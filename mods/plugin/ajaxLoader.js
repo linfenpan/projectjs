@@ -34,7 +34,7 @@ ajax = function(url, params, callback){
         params = {};
     } else {
         params = params || {};
-        callback =  callback || noop;
+        callback =  callback || windowRequire.noop;
     }
 
     xmlHttp.onreadystatechange = function(){

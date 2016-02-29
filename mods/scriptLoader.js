@@ -40,7 +40,7 @@ var loadScript, getCurrentScriptUrl;
     // this 对象，是当前的 script
     function onLoad(error){
         var script = this;
-        script.onload = script.onerror = script.onreadystatechange = null;
+        script.onload = script.onerror = script.onreadystatechange = EMPTY;
         var src = script.getAttribute("src");
 
         each(loadedMap[src], function(callback, index){
@@ -48,7 +48,7 @@ var loadScript, getCurrentScriptUrl;
         });
 
         eHead.removeChild(script);
-        loadedMap[src] = null;
+        loadedMap[src] = EMPTY;
     };
 
     // 获取当前加载的脚本 URL

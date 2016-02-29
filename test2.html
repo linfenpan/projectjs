@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>测试内联在页面中的define</title>
+</head>
+<body>
+    测试 require 请求模块
+<script type="text/javascript">
+    var define = parent.define;
+    var require = parent.require;
+
+
+    require("./test/frame2.test1.js", function(test1){
+        console.assert(test1.data, "require请求外部脚本，不通过");
+    });
+
+
+    require("./test/frame2.test1.js", "./test/frame2.test2.js", function(test1, test2){
+        console.assert(test1.data && test2.data, "require请求多个脚本，不通过");
+    });
+
+
+    require("./test/frame2.test1.js", "./test/frame2.test2.js", function(){
+        // rquire(m1, m2, fn) 时，已经把模块编译完成，所以，此函数内，能通过以下方式，获取到内容
+        // 没经过 require 处理的模块，是无法保证正确获取的!!! 包括 define(moduleName, fn) 这样的模块
+        // @notice 不推荐下面的使用方法，如果你是开发者，可以拿去玩玩
+        var test1 = require("./test/frame2.test1.js");
+        var test2 = require("./test/frame2.test2.js");
+        console.assert(test1.data && test2.data, "require立刻返回加载完成的模块，不通过");
+    });
+
+
+    require("./test/frame2.test3.js", function(frame2){
+        console.assert(frame2.data == "frame2", "require外部脚本时，外部脚本的依赖，解析错误");
+    });
+
+
+    require("./test/frame2/frame2.test4.js", function(frame2){
+        console.assert(frame2.data == "frame2", "一个文件内多个define出问题");
+        // 内置 define，会导致路径混乱吗?
+        // 异步 define，module.url 都是指向项目基础寻址目录
+        define("frame2Test4Async", function(require, exports, module){
+            var frame2 = require("frame2Test4");
+            console.assert(module.url == require.url("./"), "异步定义模块，需要指向basePath");
+            console.assert(frame2.data == "frame2", "异步使用define，导致路径混乱");
+        });
+        require("frame2Test4Async");
+    });
+
+
+    define("frame2Test5Inner", function(require){
+        var frame2 = require("./frame2.test5.js");
+        console.assert(frame2.data == "frame2", "define url参数，不通过");
+    }, "./test/");
+    require("frame2Test5Inner");
+</script>
+</body>
+</html>

@@ -30,7 +30,7 @@ var requireConfig;
                 var scriptSrc = path.dir(scriptNode.hasAttribute ? scriptNode.src : scriptNode.getAttribute("src", 4));
                 pageURL = path.dir(scriptSrc);
             }
-            scriptNode = null;
+            scriptNode = EMPTY;
 
             if (basePath) {
                 if (isAbsolute(basePath)) {

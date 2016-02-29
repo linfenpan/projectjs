@@ -4,6 +4,8 @@
 
 测试地址: [demo](http://linfenpan.github.io/demo/project/)
 
+测试请使用最新版本~
+
 因流行的模块加载器，或用法不够简单、大小超出预期等原因，不能很好的满足日常开发，为此，模仿编写了此项目。
 如要使用或测试，请用最新版
 
@@ -28,7 +30,8 @@
 
 	1. 没有完善脚本的打包规则
 	2. 仅且适用于浏览器，其余的设备，因木有接触，不做更多兼容
-	3. 维护团队么...... [只有一头熊
+	3. 团队各种奇怪的玩法，表示节操君已经掉了一地
+	4. 维护团队么...... [只有一头熊
 
 
 # 简单用例
@@ -86,6 +89,7 @@ define("moduleA", function(require){
 });
 ```
 
+
 如果 define 写在页面的内联脚本中，其中的 require 寻址路径，与初始[配置]寻址路径保持一致。
 ``` html
 <div> http://www.test.com/index.html </div>
@@ -108,6 +112,16 @@ define("moduleA", function(require){
 则  require("authorText.js")  对应是 http://www.test.com/script/authorText.js
 
 
+也可以通过第3个参数[必须是3个参数]，设置 define 中的寻址路径，用于应对异步 define 之类的需求。
+异步设置 define，默认的寻址路径，都是 项目的寻址路径。
+``` javascript
+define("moduleA", function(require){
+	// require 寻址文件，将从 http://www.test.com/ 开始寻找
+}, "http://www.test.com/");
+```
+注意: 第3个参数，如果是 "//"，则代表当前项目的初始寻址路径。
+
+
 # require
 
 用于加载一个或多个模块。用法如下: require(module1, [module2, module3, ...], callback?);
@@ -122,6 +136,24 @@ define(function(require){
 });
 ```
 如果 require 最后，跟着callback，模块将会异步加载。
+
+见如下代码:
+``` javascript
+<script>
+require("./user.js", function(user){
+	// 肯定能获取到 user 对象
+});
+
+// 尝试去获取 user.js，如果在调用这句函数前，user.js幸运的被加载过，这里，会成功返回user对象，否则是 undefined
+var user = require("./user.js");
+
+// 换一种形式，也是可以获取到的
+require("./user.js", function(){
+	// 因为在运行此行前，已经保证 user.js 加载过了，下面能毫无压力的使用
+	var user = require("./user.js");
+});
+</script>
+```
 
 在 require 中，有几个实用的工具方法:
 
@@ -236,6 +268,7 @@ $(function(){
 
 	重写css loader加载进来的样式时，需要注意
 
+3、define("moduleA", fn);
 
 # 结语
 

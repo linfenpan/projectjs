@@ -16,7 +16,7 @@ var path = {
     },
     // 是否绝对路径, ftp:// 或 http:// ，不过 // 这种不知道算不算呢?
     isAbsolute: function(uri){
-        return /:\/\//.test(uri);
+        return /(https?|ftp):\/\//.test(uri);
     },
     // 路径合并
     join: function(){

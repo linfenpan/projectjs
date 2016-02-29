@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>测试内联在页面中的define</title>
+</head>
+<body>
+    测试内联在页面中的define
+<script type="text/javascript">
+    var define = parent.define;
+    var require = parent.require;
+
+    var frame1Content = "frame1 inner content";
+
+    define("frame1Content", function(require, exports){
+        exports.data = frame1Content;
+    });
+    require("frame1Content", function(frame1){
+        console.assert(frame1.data == frame1Content, "内联页面中的define，不通过");
+    });
+
+    define("frame1ContentInline", frame1Content);
+    require("frame1ContentInline", function(frame1){
+        console.assert(frame1 == frame1Content, "内联页面中的define，不通过");
+    });
+
+
+    define("frame1Require", function(require, exports){
+        exports.data = require("./test/frame1.require.js");
+    });
+    require("frame1Require", function(frame1){
+        console.assert(frame1.data == "frame1 outer content", "define('name', fn)中的require，不通过");
+    });
+
+
+    define("mod://test/", function(require, exports){
+        exports.data = require("./test/frame1.require.js");
+    });
+    require("mod://test/", function(frame1){
+        console.assert(frame1.data == "frame1 outer content", "define('name', fn)中的require，不通过");
+    });
+
+
+    define("在内联脚本中，这样的定义是无效的。完全无法使用，也不会报错");
+</script>
+</body>
+</html>

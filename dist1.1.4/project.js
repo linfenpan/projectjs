@@ -1,4 +1,4 @@
-/*! By da宗熊 2016-02-27 v1.1.4 https://github.com/linfenpan/projectM */
+/*! By da宗熊 2016-02-29 v1.1.4 https://github.com/linfenpan/projectM */
 ;(function(window){
 var winDocument = window.document;
 var eHead = winDocument.head || winDocument.getElementsByTagName("head")[0] || winDocument.documentElement;
@@ -19,7 +19,11 @@ function queryType(obj){
 };
 
 function isFunction(obj){
-    return queryType(obj) === "function";
+    return queryType(obj) == "function";
+};
+
+function isString(obj){
+    return queryType(obj) == "string";
 };
 
 function createElement(elem){
@@ -93,7 +97,7 @@ var path = {
     },
     // 是否绝对路径, ftp:// 或 http:// ，不过 // 这种不知道算不算呢?
     isAbsolute: function(uri){
-        return /:\/\//.test(uri);
+        return /(https?|ftp):\/\//.test(uri);
     },
     // 路径合并
     join: function(){
@@ -168,7 +172,7 @@ var loadScript, getCurrentScriptUrl;
     // this 对象，是当前的 script
     function onLoad(error){
         var script = this;
-        script.onload = script.onerror = script.onreadystatechange = null;
+        script.onload = script.onerror = script.onreadystatechange = EMPTY;
         var src = script.getAttribute("src");
 
         each(loadedMap[src], function(callback, index){
@@ -176,7 +180,7 @@ var loadScript, getCurrentScriptUrl;
         });
 
         eHead.removeChild(script);
-        loadedMap[src] = null;
+        loadedMap[src] = EMPTY;
     };
 
     // 获取当前加载的脚本 URL
@@ -216,10 +220,12 @@ var requireModuleAlias = {  };
 // 模块状态
 var FINISH = 1, LOADING = 0;
 // require 额外拓展的功能
-var requireExtension = {};
+var requireExtension = { };
 
 // 当require加载板块时，如果新板块有 define 函数，则会把 define 的结构，记录在这里
 var defineResult;
+// 正在调用 define 进行设置的函数~
+var defineFns = [];
 // 怪异的 define 模式，在此模式下，js加载完成后，并不会立刻运行
 var isScriptExecuteDelayMode = !!winDocument.attachEvent;
 
@@ -255,7 +261,7 @@ var requireConfig;
                 var scriptSrc = path.dir(scriptNode.hasAttribute ? scriptNode.src : scriptNode.getAttribute("src", 4));
                 pageURL = path.dir(scriptSrc);
             }
-            scriptNode = null;
+            scriptNode = EMPTY;
 
             if (basePath) {
                 if (isAbsolute(basePath)) {
@@ -274,29 +280,24 @@ var requireConfig;
 var windowDefine;
 ;(function(window){
 
+// 无论那种模式下，都会先执行 define 操作，才会运行 script onload
 // @example:
 //  define("moduleA", "test"); --> {url: "moduleA", exports: "test", state: FINISH}
 //  define("moduleB", function(require, exports, module){ exports.data = 123; }); --> {url: "moduleB", exports: {data: 123}, state: FINISH}
 //  define("test2"); --> {url: "此函数的链接", exports: "test2", state: FINISH};
 //  define(function(require, exports, module){ exports.data = 123; }); --> {url: "此函数的链接", exports: {data: 123}, state: FINISH};
-//  define(function(){},url);  --> {url: url, exports: }
+// @notice 下面功能，用于测试，如果没有，将在以后版本删除
+//  define(function(){},url);  --> { url: url, exports: }
+//  define(moduleName, function(){}, url);  --> {url: url, exports: }
 function define(moduleName, fn, requireUrl){
     var argsLength = arguments.length;
-    switch (argsLength) {
-        case 1:
-            fn = moduleName;
-            defineWithoutName(fn);
-            break;
-        case 2:
-            defineWithName(moduleName, fn);
-            break;
-        default:
-            if (!isFunction(fn)) {
-                requireUrl = EMPTY;
-            }
-            defineWithName(moduleName, fn, requireUrl);
-            break;
-    };
+    if (isString(moduleName) && argsLength > 1) {
+        defineWithName(moduleName, fn, requireUrl);
+    } else {
+        requireUrl = fn;
+        fn = moduleName;
+        defineWithoutName(fn, requireUrl);
+    }
 };
 
 function defineWithName(moduleName, fn, requireUrl){
@@ -306,17 +307,20 @@ function defineWithName(moduleName, fn, requireUrl){
     }
     module.exports = fn;
 
-    requireUrl = requireUrl || "";
-    var basePathReg = /^\/\//;
     if (requireUrl) {
-        if (basePathReg.test(requireUrl)) {
-            requireUrl = requireUrl.replace(basePathReg, requireBasePath);
+        module.url = queryRequireUrl(requireUrl);
+    } else {
+        if (isScriptExecuteDelayMode) {
+            var url = getCurrentScriptUrl();
+            module.url = url;
+        } else {
+            // 压入盏中，在 require 的分析中，再插入对应的 url
+            defineFns.push(module);
         }
-        module.url = path.join(requireUrl, "/");
     }
 };
 
-function defineWithoutName(func){
+function defineWithoutName(func, requireUrl){
     defineResult = EMPTY;
     if (isScriptExecuteDelayMode) {
         // 脚本延迟执行模式下，script 执行完之后，不会立刻执行 onload 事件，而是会有一定延后，或者等待其它脚本执行完毕，才会触发自己的 onload 事件
@@ -324,10 +328,26 @@ function defineWithoutName(func){
         var url = getCurrentScriptUrl();
         var module = getRequireModule(url);
         module.exports = func;
+
+        if (requireUrl) {
+            module.url = queryRequireUrl(requireUrl);
+        }
     } else {
         // 这个结果，会被 scriptLoadedFinish 抓住，并使用
         defineResult = func;
     }
+};
+
+function queryRequireUrl(url){
+    var requireUrl = url || "";
+    var basePathReg = /^\/\//;
+    if (requireUrl) {
+        if (basePathReg.test(requireUrl)) {
+            requireUrl = requireUrl.replace(basePathReg, requireBasePath);
+        }
+        requireUrl = path.join(requireUrl, "/");
+    }
+    return requireUrl;
 };
 
 windowDefine = define;
@@ -343,20 +363,12 @@ var getAbsoluteURL;
 // require 加载的模块
 function initModule(url){
     if (!requireLoadedModule[url]) {
-        var module;
-        if (requireModuleAlias[url]) {
-            module = {
-                url: EMPTY,
-                state: FINISH,
-                exports: requireModuleAlias[url]
-            };
-        } else {
-            module = {
-                url: EMPTY,
-                state: LOADING,
-                exports: EMPTY
-            };
-        }
+        var isAlias = url in requireModuleAlias;
+        var module = {
+            url: EMPTY,
+            state: isAlias ? FINISH : LOADING,
+            exports: isAlias ? requireModuleAlias[url] : EMPTY
+        };
         requireLoadedModule[url] = module;
     };
     return requireLoadedModule[url];
@@ -402,18 +414,20 @@ function require(){
         callback = noop;
     }
 
-    loadAllModules(requireBasePath, modules, callback);
+    return loadAllModules(requireBasePath, modules, callback);
 };
 
 function loadAllModules(dirPath, modules, callback){
     var args = [];
-    var modulesCount = modules.length;
+    var loadedList = [];
+    var modulesCount = moduleLength = modules.length;
     each(modules, function(module, index){
-        loadModule(dirPath, module, function(exports, module){
+        var loadedExport = loadModule(dirPath, module, function(exports){
             args[index] = exports;
             modulesCount--;
             checkLoadFinish();
         });
+        loadedList.push(loadedExport);
     });
     function checkLoadFinish(){
         if (modulesCount <= 0){
@@ -422,48 +436,47 @@ function loadAllModules(dirPath, modules, callback){
         }
     };
     checkLoadFinish();
+
+    return moduleLength <= 1 ? loadedList[0] : loadedList;
 };
 
 function loadModule(dirPath, moduleName, callback){
-    var module;
     // 获取真实板块名
     moduleName = queryRealModuleName(moduleName, dirPath);
+    // 板块
+    var module = initModule(moduleName);
 
     // 别名模块，立刻返回
-    if (requireModuleAlias[moduleName]) {
-        module = initModule(moduleName);
-        return callback(module.exports, module);
+    var aliasModule = requireModuleAlias[moduleName];
+    if (aliasModule) {
+        callback(aliasModule);
+        return aliasModule;
     }
 
-    // @notice 只在 loadAllModules 中传入，这里不作是否存在的检测
-    // moduleName = queryRealModuleName(moduleName);
-    module = initModule(moduleName);
-
-    // 加载完成的模块，立刻返回
+    // 加载完成的模块，立刻返回，用于别名
     var state = module.state;
     if (state == FINISH) {
-        return callback(module.exports, module);
+        var moduleExports = module.exports;
+        callback(moduleExports);
+        return moduleExports;
     }
 
     // 如果不是绝对路径，使用父级路径
-    // @BUG 在 data.js 中，define("a", fn)，模块a的寻址路径，取决于第1次require("a")出现的文件，这是 require() 驱动再运行的坑处
-    // 可以设置 define("a", fn, "//") 让它针对于 basePath 进行寻址
-    if (isAbsolute(moduleName)) {
-        module.url = moduleName;
-    } else {
-        var url = module.url;
+    var url = moduleName;
+    if (!isAbsolute(url)) {
+        url = module.url;
         if (!url) {
-            module.url = dirPath;
+            url = dirPath;
         } else if (!isAbsolute(url)) {
-            module.url = getModuleAbsURL(url, dirPath);
+            url = getModuleAbsURL(url, dirPath);
         }
     }
+    module.url = path.clearExtra(url);
 
     var extname, loadFn;
     if (isAbsolute(moduleName)) {
         extname = path.ext(moduleName).toLowerCase();
         loadFn = moduleLoader[extname] || moduleLoader._;
-        module.url = path.clearExtra(moduleName);
     } else {
         extname = "js";
         loadFn = function(name, callback){
@@ -480,7 +493,7 @@ function loadModule(dirPath, moduleName, callback){
         switch (extname) {
             case "js":
                 if (module.state !== FINISH) {
-                    scriptLoadedFinish(moduleName, finish);
+                    scriptLoadedFinish(module, finish);
                 } else {
                     finish(module.exports);
                 }
@@ -491,20 +504,28 @@ function loadModule(dirPath, moduleName, callback){
         function finish(data){
             module.state = FINISH;
             module.exports = data;
-            callback(module.exports, module);
+            callback(module.exports);
         };
     });
 };
 
-function scriptLoadedFinish(url, callback){
-    var module = getModule(url);
+function scriptLoadedFinish(module, callback){
+    var url = module.url;
     if (isScriptExecuteDelayMode) {
         defineResult = module.exports;
+    } else {
+        // defineFns 是记录下那些 define("moduleName", fn) 的列表
+        // 用于修正这些奇怪板块的链接
+        each(defineFns, function(module){
+            module.url = url;
+        });
+        defineFns = [];
     }
 
     // 重复加载 两次脚本，在第1次脚本分析完成之前，status == LOADING..，但是内容却已经加载完成了
+    // 这样的赋值，为了应对 0 的情况
     module.exports = defineResult || module.exports;
-    defineResult = null;
+    defineResult = EMPTY;
 
     anlyseModuleExports(module, function(exports){
         callback(exports);
@@ -531,8 +552,8 @@ function anlyseModuleExports(module, callback){
 };
 
 // 分析函数依赖
-function anlyseFunctionRely(url, exports, callback){
-    var fnContent = exports.toString();
+function anlyseFunctionRely(url, exportsFn, callback){
+    var fnContent = exportsFn.toString();
     // 1. 删除注释、换行、空格
     fnContent = removeComment(fnContent).replace(/\s*/g, "");
     // 2. 分析依赖
@@ -547,8 +568,8 @@ function anlyseFunctionRely(url, exports, callback){
     // 4. 执行 exports 得到最后的 结果
     var moduleDirPath = path.dir(url);
     loadAllModules(moduleDirPath, needLoadModules, function(){
-        var module = {exports: {}, url: moduleDirPath};
-        exports(createDefineRequire(moduleDirPath), module.exports, module);
+        var module = {exports: {}, url: url};
+        exportsFn(createDefineRequire(moduleDirPath), module.exports, module);
         callback(module.exports);
     });
 };
@@ -595,6 +616,7 @@ moduleLoader.setDefault("js");
 // require 功能拓展
 function extendRequire(require, dirPath){
     combine(require, {
+        path: path,
         loader: moduleLoader,
         addExtension: addExtension,
         url: function(url){ return getModuleAbsURL(url, dirPath); }

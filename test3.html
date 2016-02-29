@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>测试内联在页面中的define</title>
+</head>
+<body>
+    require内置的方法测试01[还有拓展版的测试]<br/>
+    注意，window.require 比其它 require，多了一个 config 的函数<br/>
+    其余方法大部分一致。
+<script type="text/javascript">
+    var define = parent.define;
+    var require = parent.require;
+
+    var basePath = "http://www.test.com/";
+
+    console.assert(
+        require.path.normal(basePath + "/test//../") == basePath, "require.path.normal方法不通过"
+    );
+    console.assert(
+        require.path.join(basePath, "//test/") == basePath + "test/", "require.path.join方法不通过"
+    );
+    console.assert(
+        require.path.dir(basePath) == basePath, "require.path.dir方法不通过"
+    );
+    console.assert(
+        require.path.ext(basePath + "index.html") == "html", "require.path.ext方法不通过"
+    );
+
+
+    console.assert(
+        require.url("./test3.html") == location.href, "require.url不通过"
+    );
+
+
+    // 配置模板，从 test 目录读取数据
+    require.config({ basePath: "/test"});
+
+    require("./frame3.test1.js", function(frame3){
+        console.assert(frame3.data == "frame3", "require.config({ basePath: ''})不通过");
+    });
+
+    // 防止之后 demo 出BUG
+    require.config({ basePath: "./" });
+
+
+    // 配置模板
+    require.config({
+        template: {
+            test: "./test"
+        }
+    });
+
+    require("{test}/frame3.test2.js", function(frame3){
+        console.assert(frame3.data == "frame3", "require.config({ template: {}})不通过");
+    });
+
+
+    // 配置别名
+    require.config({
+        alias: {
+            frame3Alias: { data: "frame3" }
+        }
+    });
+
+    require("frame3Alias", function(frame3){
+        console.assert(frame3.data == "frame3", "require.config({ alias: {}})不通过");
+    });
+
+</script>
+</body>
+</html>

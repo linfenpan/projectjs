@@ -17,7 +17,11 @@ function queryType(obj){
 };
 
 function isFunction(obj){
-    return queryType(obj) === "function";
+    return queryType(obj) == "function";
+};
+
+function isString(obj){
+    return queryType(obj) == "string";
 };
 
 function createElement(elem){

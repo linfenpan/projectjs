@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>其它测试</title>
+</head>
+<body>
+    测试 full 版新增的几个功能，<br/>不是full版本的同学，无视这里产生的错误吧<br/>
+
+<script type="text/javascript">
+var define = parent.define;
+var require = parent.require;
+var $ = parent.$;
+
+require("./test/frame5.test1.json", function(frame5){
+    console.assert(frame5.data == "frame5", "json loader 不通过")
+});
+require("./test/frame5.test2.txt!ajax", function(content){
+    content = $.trim(content);
+    console.assert(content == "frame5", "json loader 不通过")
+});
+
+require("./test/frame5.test3.css", function(){
+    console.assert(parent.document.getElementById("test").clientWidth == 10, "样式加载错误")
+});
+
+
+// require.ajax, require.css 两功能的链接，不会受到 require.config() 的一切影响
+require.ajax("./test/frame5.test2.txt", function(error, txt){
+    console.assert($.trim(txt) == "frame5", "require.ajax(url, callback)不通过");
+});
+</script>
+</body>
+</html>

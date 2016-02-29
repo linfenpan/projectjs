@@ -7,20 +7,12 @@ var getAbsoluteURL;
 // require 加载的模块
 function initModule(url){
     if (!requireLoadedModule[url]) {
-        var module;
-        if (requireModuleAlias[url]) {
-            module = {
-                url: EMPTY,
-                state: FINISH,
-                exports: requireModuleAlias[url]
-            };
-        } else {
-            module = {
-                url: EMPTY,
-                state: LOADING,
-                exports: EMPTY
-            };
-        }
+        var isAlias = url in requireModuleAlias;
+        var module = {
+            url: EMPTY,
+            state: isAlias ? FINISH : LOADING,
+            exports: isAlias ? requireModuleAlias[url] : EMPTY
+        };
         requireLoadedModule[url] = module;
     };
     return requireLoadedModule[url];
@@ -66,18 +58,20 @@ function require(){
         callback = noop;
     }
 
-    loadAllModules(requireBasePath, modules, callback);
+    return loadAllModules(requireBasePath, modules, callback);
 };
 
 function loadAllModules(dirPath, modules, callback){
     var args = [];
-    var modulesCount = modules.length;
+    var loadedList = [];
+    var modulesCount = moduleLength = modules.length;
     each(modules, function(module, index){
-        loadModule(dirPath, module, function(exports, module){
+        var loadedExport = loadModule(dirPath, module, function(exports){
             args[index] = exports;
             modulesCount--;
             checkLoadFinish();
         });
+        loadedList.push(loadedExport);
     });
     function checkLoadFinish(){
         if (modulesCount <= 0){
@@ -86,48 +80,47 @@ function loadAllModules(dirPath, modules, callback){
         }
     };
     checkLoadFinish();
+
+    return moduleLength <= 1 ? loadedList[0] : loadedList;
 };
 
 function loadModule(dirPath, moduleName, callback){
-    var module;
     // 获取真实板块名
     moduleName = queryRealModuleName(moduleName, dirPath);
+    // 板块
+    var module = initModule(moduleName);
 
     // 别名模块，立刻返回
-    if (requireModuleAlias[moduleName]) {
-        module = initModule(moduleName);
-        return callback(module.exports, module);
+    var aliasModule = requireModuleAlias[moduleName];
+    if (aliasModule) {
+        callback(aliasModule);
+        return aliasModule;
     }
 
-    // @notice 只在 loadAllModules 中传入，这里不作是否存在的检测
-    // moduleName = queryRealModuleName(moduleName);
-    module = initModule(moduleName);
-
-    // 加载完成的模块，立刻返回
+    // 加载完成的模块，立刻返回，用于别名
     var state = module.state;
     if (state == FINISH) {
-        return callback(module.exports, module);
+        var moduleExports = module.exports;
+        callback(moduleExports);
+        return moduleExports;
     }
 
     // 如果不是绝对路径，使用父级路径
-    // @BUG 在 data.js 中，define("a", fn)，模块a的寻址路径，取决于第1次require("a")出现的文件，这是 require() 驱动再运行的坑处
-    // 可以设置 define("a", fn, "//") 让它针对于 basePath 进行寻址
-    if (isAbsolute(moduleName)) {
-        module.url = moduleName;
-    } else {
-        var url = module.url;
+    var url = moduleName;
+    if (!isAbsolute(url)) {
+        url = module.url;
         if (!url) {
-            module.url = dirPath;
+            url = dirPath;
         } else if (!isAbsolute(url)) {
-            module.url = getModuleAbsURL(url, dirPath);
+            url = getModuleAbsURL(url, dirPath);
         }
     }
+    module.url = path.clearExtra(url);
 
     var extname, loadFn;
     if (isAbsolute(moduleName)) {
         extname = path.ext(moduleName).toLowerCase();
         loadFn = moduleLoader[extname] || moduleLoader._;
-        module.url = path.clearExtra(moduleName);
     } else {
         extname = "js";
         loadFn = function(name, callback){
@@ -144,7 +137,7 @@ function loadModule(dirPath, moduleName, callback){
         switch (extname) {
             case "js":
                 if (module.state !== FINISH) {
-                    scriptLoadedFinish(moduleName, finish);
+                    scriptLoadedFinish(module, finish);
                 } else {
                     finish(module.exports);
                 }
@@ -155,20 +148,28 @@ function loadModule(dirPath, moduleName, callback){
         function finish(data){
             module.state = FINISH;
             module.exports = data;
-            callback(module.exports, module);
+            callback(module.exports);
         };
     });
 };
 
-function scriptLoadedFinish(url, callback){
-    var module = getModule(url);
+function scriptLoadedFinish(module, callback){
+    var url = module.url;
     if (isScriptExecuteDelayMode) {
         defineResult = module.exports;
+    } else {
+        // defineFns 是记录下那些 define("moduleName", fn) 的列表
+        // 用于修正这些奇怪板块的链接
+        each(defineFns, function(module){
+            module.url = url;
+        });
+        defineFns = [];
     }
 
     // 重复加载 两次脚本，在第1次脚本分析完成之前，status == LOADING..，但是内容却已经加载完成了
+    // 这样的赋值，为了应对 0 的情况
     module.exports = defineResult || module.exports;
-    defineResult = null;
+    defineResult = EMPTY;
 
     anlyseModuleExports(module, function(exports){
         callback(exports);
@@ -195,8 +196,8 @@ function anlyseModuleExports(module, callback){
 };
 
 // 分析函数依赖
-function anlyseFunctionRely(url, exports, callback){
-    var fnContent = exports.toString();
+function anlyseFunctionRely(url, exportsFn, callback){
+    var fnContent = exportsFn.toString();
     // 1. 删除注释、换行、空格
     fnContent = removeComment(fnContent).replace(/\s*/g, "");
     // 2. 分析依赖
@@ -211,8 +212,8 @@ function anlyseFunctionRely(url, exports, callback){
     // 4. 执行 exports 得到最后的 结果
     var moduleDirPath = path.dir(url);
     loadAllModules(moduleDirPath, needLoadModules, function(){
-        var module = {exports: {}, url: moduleDirPath};
-        exports(createDefineRequire(moduleDirPath), module.exports, module);
+        var module = {exports: {}, url: url};
+        exportsFn(createDefineRequire(moduleDirPath), module.exports, module);
         callback(module.exports);
     });
 };
@@ -259,6 +260,7 @@ moduleLoader.setDefault("js");
 // require 功能拓展
 function extendRequire(require, dirPath){
     combine(require, {
+        path: path,
         loader: moduleLoader,
         addExtension: addExtension,
         url: function(url){ return getModuleAbsURL(url, dirPath); }
