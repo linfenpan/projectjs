@@ -1,4 +1,4 @@
-/*! By da宗熊 2016-02-29 v1.1.4 https://github.com/linfenpan/projectM */
+/*! By da宗熊 2016-03-01 v1.1.4 https://github.com/linfenpan/projectM */
 ;(function(window){
 var winDocument = window.document;
 var eHead = winDocument.head || winDocument.getElementsByTagName("head")[0] || winDocument.documentElement;
@@ -515,7 +515,7 @@ function scriptLoadedFinish(module, callback){
         defineResult = module.exports;
     } else {
         // defineFns 是记录下那些 define("moduleName", fn) 的列表
-        // 用于修正这些奇怪板块的链接
+        // 用于修正这些板块的链接
         each(defineFns, function(module){
             module.url = url;
         });

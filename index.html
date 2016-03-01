@@ -5,24 +5,24 @@
     <title>脚本项目</title>
     <style media="screen">
         * { padding: 0; margin: 0; }
-        iframe { width: 540px; height: 120px; margin-top: 20px; border: 1px solid #ddd; box-sizing: border-box; }
+        iframe { display: block; width: 540px; height: 120px; margin-top: 20px; border: 1px solid #ddd; box-sizing: border-box; }
     </style>
     <script type="text/javascript" src="./jquery.js"></script>
 
     <!-- 基本模块 -->
-    <!-- <script src="./mods/global.js" charset="utf-8"></script>
+    <script src="./mods/global.js" charset="utf-8"></script>
     <script src="./mods/path.js" charset="utf-8"></script>
     <script src="./mods/scriptLoader.js" charset="utf-8"></script>
     <script src="./mods/main_global.js" charset="utf-8"></script>
     <script src="./mods/main_config.js" charset="utf-8"></script>
     <script src="./mods/main_define.js" charset="utf-8"></script>
     <script src="./mods/main_require.js" charset="utf-8"></script>
-    <script src="./mods/main_interface.js" charset="utf-8"></script> -->
+    <script src="./mods/main_interface.js" charset="utf-8"></script>
     <!-- 额外模块 -->
-    <!-- <script src="./mods/plugin/ajaxLoader.js" charset="utf-8"></script>
-    <script src="./mods/plugin/linkLoader.js" charset="utf-8"></script> -->
+    <script src="./mods/plugin/ajaxLoader.js" charset="utf-8"></script>
+    <script src="./mods/plugin/linkLoader.js" charset="utf-8"></script>
 
-    <script type="text/javascript" src="./project.full.min.js"></script>
+    <!-- <script type="text/javascript" src="./project.full.min.js"></script> -->
 </head>
 <body>
     project.full.js 相对于 project.js，增加了3个loader板块:<br/>
@@ -40,6 +40,6 @@
     <iframe src="./test4.html"></iframe>
 
     <iframe src="./test5.html"></iframe>
-    <div id="test"><!-- 样式加载测试 --></div>
+    <div id="test">xxx<!-- 样式加载测试 --></div>
 </body>
 </html>

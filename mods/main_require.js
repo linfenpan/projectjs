@@ -159,7 +159,7 @@ function scriptLoadedFinish(module, callback){
         defineResult = module.exports;
     } else {
         // defineFns 是记录下那些 define("moduleName", fn) 的列表
-        // 用于修正这些奇怪板块的链接
+        // 用于修正这些板块的链接
         each(defineFns, function(module){
             module.url = url;
         });
