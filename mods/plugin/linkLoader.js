@@ -3,7 +3,7 @@
 // `onload` 事件，在 WebKit < 535.23 and Firefox < 9.0 下，不触发
 //  - https://developer.mozilla.org/en/HTML/Element/link#Stylesheet_load_events
 var userAgent = navigator.userAgent;
-// SDK 浮点，把 agent 改为了 android/webview，大坑!!!
+// SDK 浮点中的webview，把 agent 改为了 android/webview，大坑!!!
 var isWebKit = /webkit|webview/i.test(userAgent);
 
 function pollCss(node, callback) {
@@ -39,7 +39,7 @@ function createLink(href, callback){
     link.rel = "stylesheet";
     link.href = href;
 
-    function linkReady(){
+    var linkReady = function(){
         link.onload = link.onerror = null;
         clearInterval(timer);
         callback();

@@ -1,11 +1,12 @@
 var winDocument = window.document;
 var eHead = winDocument.head || winDocument.getElementsByTagName("head")[0] || winDocument.documentElement;
+var eBase = eHead.getElementsByTagName("base")[0];
 
 var EMPTY = null;
 var internalToString = Object.prototype.toString;
 var internalSlice = [].slice;
 
-var COMMENT_REGEXP = /("([^\\\"]|\\.)*")|('([^\\\']|\\.)*')|(\/{2,}.*?(\r|\n))|(\/\*(\n|.)*?\*\/)/g;
+var COMMENT_REGEXP = /("([^\\\"]|\\.)*")|('([^\\\']|\\.)*')|(\/{2,}.*?(\r|\n))|(\/\*(\s|.)*?\*\/)/g;
 
 // @NOTICES: 考虑到代码压缩之后，eval里的"o."就没效了..没想到更好的，有大神指导不?
 var template = Function("s", "o", "return s.replace(/{([^}]*)}/g,function(a,k){return eval('o.'+k)})");

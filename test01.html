@@ -16,12 +16,12 @@
         exports.data = frame1Content;
     });
     require("frame1Content", function(frame1){
-        console.assert(frame1.data == frame1Content, "内联页面中的define，不通过");
+        console.assert(frame1.data == frame1Content, "内联页面中的define，不通过1");
     });
 
     define("frame1ContentInline", frame1Content);
     require("frame1ContentInline", function(frame1){
-        console.assert(frame1 == frame1Content, "内联页面中的define，不通过");
+        console.assert(frame1 == frame1Content, "内联页面中的define，不通过2");
     });
 
 

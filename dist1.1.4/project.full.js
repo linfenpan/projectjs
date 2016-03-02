@@ -1,13 +1,14 @@
-/*! By da宗熊 2016-03-01 v1.1.4 https://github.com/linfenpan/projectM */
+/*! By da宗熊 2016-03-02 v1.1.4 https://github.com/linfenpan/projectM */
 ;(function(window){
 var winDocument = window.document;
 var eHead = winDocument.head || winDocument.getElementsByTagName("head")[0] || winDocument.documentElement;
+var eBase = eHead.getElementsByTagName("base")[0];
 
 var EMPTY = null;
 var internalToString = Object.prototype.toString;
 var internalSlice = [].slice;
 
-var COMMENT_REGEXP = /("([^\\\"]|\\.)*")|('([^\\\']|\\.)*')|(\/{2,}.*?(\r|\n))|(\/\*(\n|.)*?\*\/)/g;
+var COMMENT_REGEXP = /("([^\\\"]|\\.)*")|('([^\\\']|\\.)*')|(\/{2,}.*?(\r|\n))|(\/\*(\s|.)*?\*\/)/g;
 
 // @NOTICES: 考虑到代码压缩之后，eval里的"o."就没效了..没想到更好的，有大神指导不?
 var template = Function("s", "o", "return s.replace(/{([^}]*)}/g,function(a,k){return eval('o.'+k)})");
@@ -134,8 +135,11 @@ var loadScript, getCurrentScriptUrl;
 
 // 脚本下载
 ;(function(window){
-    var loadedMap = {  };
+    function getNodeSrc(node){
+        return node.getAttribute("src");
+    };
 
+    var loadedMap = {  };
     function _loadScript(src, callback){
         if (loadedMap[src]) {
             loadedMap[src].push(callback);
@@ -150,7 +154,6 @@ var loadScript, getCurrentScriptUrl;
         script.async = true;
         script.type= 'text/javascript';
 
-        // 如果支持 onload
         if ("onload" in script) {
             script.onload = function(){
                 onLoad.call(script, false);
@@ -166,38 +169,54 @@ var loadScript, getCurrentScriptUrl;
             }
         };
         script.src = src;
-        eHead.appendChild(script);
+
+        // 在 ie6-9 下，脚本，如果脚本有缓存，则会在插入的时候，立刻运行
+        // 用 interactiveScript 暂时记录下当前的链接，可以有效的传递当前运行脚本地址
+        currentAddingScript = script;
+        // ref: http://dev.jquery.com/ticket/2709
+        eBase ?
+            eHead.insertBefore(script, eBase) :
+            eHead.appendChild(script);
+        currentAddingScript = EMPTY;
+
     };
 
     // this 对象，是当前的 script
     function onLoad(error){
         var script = this;
+        var src = getNodeSrc(script);
+        // @bug ie9下，须先 removeChild，再callback
+        // 以防在 require相互嵌套时 getCurrentScriptUrl() 方法，获取到错误的脚本链接
+        eHead.removeChild(script);
         script.onload = script.onerror = script.onreadystatechange = EMPTY;
-        var src = script.getAttribute("src");
 
         each(loadedMap[src], function(callback, index){
             callback(error, src);
         });
-
-        eHead.removeChild(script);
         loadedMap[src] = EMPTY;
     };
 
     // 获取当前加载的脚本 URL
+    var currentAddingScript;
     var interactiveScript;
     function _getCurrentScriptUrl(){
+        if (currentAddingScript) {
+            return getNodeSrc(currentAddingScript);
+        }
+
         // IE6 - 9 的浏览器，script.onload 之后，脚本可能还没执行完成
         // 判断当前 interactive[未执行完毕] 状态的节点，可知道当前运行的脚本
         var interactiveState = "interactive";
         if (interactiveScript && interactiveScript.readyState == interactiveState) {
-            return interactiveScript.getAttribute("src");
+            return getNodeSrc(interactiveScript);
         }
+
         var scripts = eHead.getElementsByTagName("script");
         for (var i = scripts.length - 1; i >= 0; i--) {
             var script = scripts[i]
             if (script.readyState == interactiveState) {
-                interactiveScript = script
-                return interactiveScript.getAttribute("src");
+                interactiveScript = script;
+                return getNodeSrc(interactiveScript);
             }
         }
     };
@@ -301,22 +320,25 @@ function define(moduleName, fn, requireUrl){
 };
 
 function defineWithName(moduleName, fn, requireUrl){
-    var module = getRequireModule(moduleName);
-    if (!isFunction(fn)) {
-        module.state = FINISH;
-    }
-    module.exports = fn;
-
-    if (requireUrl) {
-        module.url = queryRequireUrl(requireUrl);
-    } else {
-        if (isScriptExecuteDelayMode) {
-            var url = getCurrentScriptUrl();
-            module.url = url;
-        } else {
-            // 压入盏中，在 require 的分析中，再插入对应的 url
-            defineFns.push(module);
+    var module = getRequireModule(moduleName), url;
+    if(module.state != FINISH){
+        if (!isFunction(fn)) {
+            module.state = FINISH;
         }
+
+        if (requireUrl) {
+            url = queryRequireUrl(requireUrl);
+        } else {
+            if (isScriptExecuteDelayMode) {
+                url = getCurrentScriptUrl();
+            } else {
+                // 压入盏中，在 require 的分析中，再插入对应的 url
+                defineFns.push(module);
+            }
+        }
+
+        module.exports = fn;
+        module.url = url;
     }
 };
 
@@ -420,7 +442,8 @@ function require(){
 function loadAllModules(dirPath, modules, callback){
     var args = [];
     var loadedList = [];
-    var modulesCount = moduleLength = modules.length;
+    var modulesCount = modules.length;
+    var moduleLength = modulesCount;
     each(modules, function(module, index){
         var loadedExport = loadModule(dirPath, module, function(exports){
             args[index] = exports;
@@ -431,8 +454,8 @@ function loadAllModules(dirPath, modules, callback){
     });
     function checkLoadFinish(){
         if (modulesCount <= 0){
-            callback.apply(window, args);
             checkLoadFinish = noop;
+            callback.apply(window, args);
         }
     };
     checkLoadFinish();
@@ -455,8 +478,8 @@ function loadModule(dirPath, moduleName, callback){
 
     // 加载完成的模块，立刻返回，用于别名
     var state = module.state;
+    var moduleExports = module.exports;
     if (state == FINISH) {
-        var moduleExports = module.exports;
         callback(moduleExports);
         return moduleExports;
     }
@@ -471,7 +494,7 @@ function loadModule(dirPath, moduleName, callback){
             url = getModuleAbsURL(url, dirPath);
         }
     }
-    module.url = path.clearExtra(url);
+    module.url = url = path.clearExtra(url);
 
     var extname, loadFn;
     if (isAbsolute(moduleName)) {
@@ -479,8 +502,8 @@ function loadModule(dirPath, moduleName, callback){
         loadFn = moduleLoader[extname] || moduleLoader._;
     } else {
         extname = "js";
-        loadFn = function(name, callback){
-            defineResult = module.exports;
+        loadFn = function(url, callback){
+            defineResult = moduleExports;
             callback();
         };
     }
@@ -489,10 +512,16 @@ function loadModule(dirPath, moduleName, callback){
         throw "loader for suffix `"+ extname +"` is not defined";
     };
 
-    loadFn(module.url, function(loadedData){
+    defineFns = [];
+    loadFn(url, function(loadedData){
+        function finish(data){
+            module.state = FINISH;
+            module.exports = data;
+            callback(data);
+        };
         switch (extname) {
             case "js":
-                if (module.state !== FINISH) {
+                if (module.state != FINISH) {
                     scriptLoadedFinish(module, finish);
                 } else {
                     finish(module.exports);
@@ -500,11 +529,6 @@ function loadModule(dirPath, moduleName, callback){
                 break;
             default:
                 finish(loadedData);
-        };
-        function finish(data){
-            module.state = FINISH;
-            module.exports = data;
-            callback(module.exports);
         };
     });
 };
@@ -536,16 +560,14 @@ function scriptLoadedFinish(module, callback){
 function anlyseModuleExports(module, callback){
     var exports = module.exports;
     var url = module.url;
-    if (module.state === FINISH) {
+    if (module.state == FINISH) {
         callback(exports);
     } else {
         if (isFunction(exports)) {
             anlyseFunctionRely(url, exports, function(result){
-                module.state = FINISH;
                 callback(result);
             });
         } else {
-            module.state = FINISH;
             callback(exports);
         }
     }
@@ -745,7 +767,7 @@ windowRequire.loader.add(loaderName, createAjaxCallback(loaderName, toJSON));
 // `onload` 事件，在 WebKit < 535.23 and Firefox < 9.0 下，不触发
 //  - https://developer.mozilla.org/en/HTML/Element/link#Stylesheet_load_events
 var userAgent = navigator.userAgent;
-// SDK 浮点，把 agent 改为了 android/webview，大坑!!!
+// SDK 浮点中的webview，把 agent 改为了 android/webview，大坑!!!
 var isWebKit = /webkit|webview/i.test(userAgent);
 
 function pollCss(node, callback) {
@@ -781,7 +803,7 @@ function createLink(href, callback){
     link.rel = "stylesheet";
     link.href = href;
 
-    function linkReady(){
+    var linkReady = function(){
         link.onload = link.onerror = null;
         clearInterval(timer);
         callback();

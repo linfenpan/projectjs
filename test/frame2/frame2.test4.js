@@ -1,5 +1,6 @@
 define("frame2Test4", function(require, exports, module){
-    exports.data = require("./frame2.test4.data.js");
+    var data = require("./frame2.test4.data.js");
+    exports.data = data;
 });
 
 define(function(require, exports){

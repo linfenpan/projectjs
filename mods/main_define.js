@@ -23,22 +23,25 @@ function define(moduleName, fn, requireUrl){
 };
 
 function defineWithName(moduleName, fn, requireUrl){
-    var module = getRequireModule(moduleName);
-    if (!isFunction(fn)) {
-        module.state = FINISH;
-    }
-    module.exports = fn;
-
-    if (requireUrl) {
-        module.url = queryRequireUrl(requireUrl);
-    } else {
-        if (isScriptExecuteDelayMode) {
-            var url = getCurrentScriptUrl();
-            module.url = url;
-        } else {
-            // 压入盏中，在 require 的分析中，再插入对应的 url
-            defineFns.push(module);
+    var module = getRequireModule(moduleName), url;
+    if(module.state != FINISH){
+        if (!isFunction(fn)) {
+            module.state = FINISH;
         }
+
+        if (requireUrl) {
+            url = queryRequireUrl(requireUrl);
+        } else {
+            if (isScriptExecuteDelayMode) {
+                url = getCurrentScriptUrl();
+            } else {
+                // 压入盏中，在 require 的分析中，再插入对应的 url
+                defineFns.push(module);
+            }
+        }
+
+        module.exports = fn;
+        module.url = url;
     }
 };
 

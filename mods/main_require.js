@@ -64,7 +64,8 @@ function require(){
 function loadAllModules(dirPath, modules, callback){
     var args = [];
     var loadedList = [];
-    var modulesCount = moduleLength = modules.length;
+    var modulesCount = modules.length;
+    var moduleLength = modulesCount;
     each(modules, function(module, index){
         var loadedExport = loadModule(dirPath, module, function(exports){
             args[index] = exports;
@@ -75,8 +76,8 @@ function loadAllModules(dirPath, modules, callback){
     });
     function checkLoadFinish(){
         if (modulesCount <= 0){
-            callback.apply(window, args);
             checkLoadFinish = noop;
+            callback.apply(window, args);
         }
     };
     checkLoadFinish();
@@ -99,8 +100,8 @@ function loadModule(dirPath, moduleName, callback){
 
     // 加载完成的模块，立刻返回，用于别名
     var state = module.state;
+    var moduleExports = module.exports;
     if (state == FINISH) {
-        var moduleExports = module.exports;
         callback(moduleExports);
         return moduleExports;
     }
@@ -115,7 +116,7 @@ function loadModule(dirPath, moduleName, callback){
             url = getModuleAbsURL(url, dirPath);
         }
     }
-    module.url = path.clearExtra(url);
+    module.url = url = path.clearExtra(url);
 
     var extname, loadFn;
     if (isAbsolute(moduleName)) {
@@ -123,8 +124,8 @@ function loadModule(dirPath, moduleName, callback){
         loadFn = moduleLoader[extname] || moduleLoader._;
     } else {
         extname = "js";
-        loadFn = function(name, callback){
-            defineResult = module.exports;
+        loadFn = function(url, callback){
+            defineResult = moduleExports;
             callback();
         };
     }
@@ -133,10 +134,16 @@ function loadModule(dirPath, moduleName, callback){
         throw "loader for suffix `"+ extname +"` is not defined";
     };
 
-    loadFn(module.url, function(loadedData){
+    defineFns = [];
+    loadFn(url, function(loadedData){
+        function finish(data){
+            module.state = FINISH;
+            module.exports = data;
+            callback(data);
+        };
         switch (extname) {
             case "js":
-                if (module.state !== FINISH) {
+                if (module.state != FINISH) {
                     scriptLoadedFinish(module, finish);
                 } else {
                     finish(module.exports);
@@ -144,11 +151,6 @@ function loadModule(dirPath, moduleName, callback){
                 break;
             default:
                 finish(loadedData);
-        };
-        function finish(data){
-            module.state = FINISH;
-            module.exports = data;
-            callback(module.exports);
         };
     });
 };
@@ -180,16 +182,14 @@ function scriptLoadedFinish(module, callback){
 function anlyseModuleExports(module, callback){
     var exports = module.exports;
     var url = module.url;
-    if (module.state === FINISH) {
+    if (module.state == FINISH) {
         callback(exports);
     } else {
         if (isFunction(exports)) {
             anlyseFunctionRely(url, exports, function(result){
-                module.state = FINISH;
                 callback(result);
             });
         } else {
-            module.state = FINISH;
             callback(exports);
         }
     }
