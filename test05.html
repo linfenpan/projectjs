@@ -21,7 +21,7 @@ require("./test/frame5.test2.txt!ajax", function(content){
 });
 
 require("./test/frame5.test3.css", function(){
-    console.assert(parent.document.getElementById("test").clientWidth == 10, "样式加载错误")
+    console.assert(parent.document.getElementById("test").clientWidth == 200, "样式加载错误")
 });
 
 

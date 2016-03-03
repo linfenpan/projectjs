@@ -39,7 +39,6 @@
     require("./test/frame2/frame2.test4.js", function(frame2){
         console.assert(frame2.data == "frame2", "一个文件内多个define出问题");
 
-
         // 内置 define，会导致路径混乱吗?
         // 异步 define，module.url 都是指向项目基础寻址目录
         define("frame2Test4Async", function(require, exports, module){
@@ -47,16 +46,24 @@
             console.assert(module.url == require.url("./"), "异步定义模块，需要指向basePath");
             console.assert(frame2.data == "frame2", "异步使用define，导致路径混乱");
         });
-
+        require("frame2Test4Async");
     });
-
 
 
     define("frame2Test5Inner", function(require){
         var frame2 = require("./frame2.test5.js");
-        console.assert(frame2.data == "frame2", "define url参数，不通过");
+        console.assert(frame2.data == "frame2", "inline的define中，require功能不通过");
     }, "./test/");
     require("frame2Test5Inner");
+
+
+    require("./test/frame2.test6.js", function(){
+        require("./test/frame2/frame2.test6.2.js", function(){
+            require("frame2Test6", function(frame2){
+                console.assert(frame2.data == "frame2", "没有模块出口时，define(moduleA, fn)不通过");
+            });
+        });
+    });
 </script>
 </body>
 </html>
