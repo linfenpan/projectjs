@@ -1,6 +1,6 @@
 # 初衷
 
-项目地址: [projectM](https://github.com/linfenpan/projectM)
+项目地址: [projectM](https://github.com/linfenpan/projectjs)
 
 测试地址: [demo](http://linfenpan.github.io/demo/project/)
 
