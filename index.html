@@ -46,5 +46,39 @@
     <div>防止IE抽搐</div>
     <iframe src="./test05.html"></iframe>
     <div id="test">样式测试文本</div>
+
+    <!-- <script type="text/javascript">
+    define("mod1", function(require, exports, module){
+        console.log('require module: mod1');
+        module.exports = {
+            hello: function(){
+                console.log('hello mod1');
+            }
+        }
+    });
+    define("mod2", function(require, exports, module){
+        console.log('require module: mod2');
+        module.exports = {
+            hello: function(){
+                console.log('hello mod2');
+            }
+        }
+    });
+    define("mainXX", function(require, exports, module) {
+        console.log('require module: main');
+
+        var mod1 = require('mod1');
+        mod1.hello();
+        var mod2 = require('mod2');
+        mod2.hello();
+
+        return {
+            hello: function() {
+                console.log('hello main');
+            }
+        };
+    });
+    require("mainXX");
+    </script> -->
 </body>
 </html>
